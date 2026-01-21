@@ -92,6 +92,8 @@ function Component({ config = {} }) {
   const [popupPositions, setPopupPositions] = React.useState({});
   const [selectedAnnotations, setSelectedAnnotations] = React.useState([]);
   const [isConnectMode, setIsConnectMode] = React.useState(false);
+  const [showGroupingPanel, setShowGroupingPanel] = React.useState(false);
+  const [selectedLabelFilter, setSelectedLabelFilter] = React.useState(null);
   const [showSessionPanel, setShowSessionPanel] = React.useState(false);
   const [sessionName, setSessionName] = React.useState('');
   const [savedSessions, setSavedSessions] = React.useState([]);
@@ -605,6 +607,12 @@ function Component({ config = {} }) {
   const renderPanel = (side, url, setUrl, accent, label) => {
     const isLeft = side === 'left';
     const containerRef = isLeft ? leftContainerRef : rightContainerRef;
+    
+    // Filter comments based on selected label
+    const filteredComments = selectedLabelFilter 
+      ? comments.filter(c => c.side === side && c.labels && c.labels.includes(selectedLabelFilter))
+      : comments.filter(c => c.side === side);
+    
     return (
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, borderRight: isLeft ? `1px solid ${borderColor}` : 'none' }}>
         <div style={{ padding: '12px 20px', backgroundColor: panelBackgroundColor, borderBottom: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -620,7 +628,7 @@ function Component({ config = {} }) {
               </div>
             )}
           </div>
-          {comments.filter(c => c.side === side).map(comment => renderCommentPin(comment))}
+          {filteredComments.map(comment => renderCommentPin(comment))}
           {pendingCommentSide === side && renderPendingComment()}
         </div>
       </div>
@@ -669,6 +677,7 @@ function Component({ config = {} }) {
             <button className={`toolbar-btn ${showUrlInputs ? 'active' : ''}`} onClick={() => setShowUrlInputs(!showUrlInputs)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showUrlInputs ? accentColor : panelBackgroundColor, color: showUrlInputs ? '#fff' : secondaryTextColor, border: `1px solid ${showUrlInputs ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Toggle URL inputs"><Icons.Globe size={22} /></button>
             <button className={`toolbar-btn ${syncScroll ? 'active' : ''}`} onClick={() => setSyncScroll(!syncScroll)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: syncScroll ? accentColor : panelBackgroundColor, color: syncScroll ? '#fff' : secondaryTextColor, border: `1px solid ${syncScroll ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title={syncScroll ? 'Disable sync scroll' : 'Enable sync scroll'}>{syncScroll ? <Icons.Link size={22} /> : <Icons.Unlink size={22} />}</button>
             <button className={`toolbar-btn ${isAddingAnnotation ? 'active' : ''}`} onClick={() => setIsAddingAnnotation(!isAddingAnnotation)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingAnnotation ? '#8B5CF6' : panelBackgroundColor, color: isAddingAnnotation ? '#fff' : secondaryTextColor, border: `1px solid ${isAddingAnnotation ? '#8B5CF6' : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add annotation (labels + optional comment)"><Icons.Tag size={22} /></button>
+            <button className={`toolbar-btn ${showGroupingPanel ? 'active' : ''}`} onClick={() => setShowGroupingPanel(!showGroupingPanel)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showGroupingPanel ? accentColor : panelBackgroundColor, color: showGroupingPanel ? '#fff' : secondaryTextColor, border: `1px solid ${showGroupingPanel ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Group by labels"><Icons.Layers size={22} /></button>
             <button className="toolbar-btn" onClick={() => setShowSessionPanel(!showSessionPanel)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showSessionPanel ? accentColor : panelBackgroundColor, color: showSessionPanel ? '#fff' : secondaryTextColor, border: `1px solid ${showSessionPanel ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Sessions"><Icons.Save size={22} /></button>
             <button className="toolbar-btn" onClick={exportToCSV} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export to CSV"><Icons.FileText size={22} /></button>
             <button className="toolbar-btn" onClick={exportSession} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export session (JSON)"><Icons.Download size={22} /></button>
@@ -714,6 +723,153 @@ function Component({ config = {} }) {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {showGroupingPanel && (
+        <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: 320, backgroundColor: panelBackgroundColor, boxShadow: '4px 0 24px rgba(0,0,0,0.06)', zIndex: 200, display: 'flex', flexDirection: 'column', animation: 'slideIn 200ms ease-out' }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icons.Layers size={20} /><span style={{ fontWeight: 500 }}>Group by Labels</span></div>
+            <button onClick={() => setShowGroupingPanel(false)} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 6 }}><Icons.X size={18} /></button>
+          </div>
+          
+          <div style={{ padding: '12px 16px', backgroundColor, borderBottom: `1px solid ${borderColor}` }}>
+            <button 
+              onClick={() => setSelectedLabelFilter(null)}
+              style={{ 
+                width: '100%',
+                padding: '10px 12px', 
+                fontSize, 
+                fontWeight: 500, 
+                backgroundColor: selectedLabelFilter === null ? accentColor : 'transparent', 
+                color: selectedLabelFilter === null ? '#fff' : primaryTextColor,
+                border: `1px solid ${selectedLabelFilter === null ? accentColor : borderColor}`, 
+                borderRadius: 8, 
+                cursor: 'pointer',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <span>All Annotations</span>
+              <span style={{ fontSize: fontSize - 2, opacity: 0.8 }}>({comments.length})</span>
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
+            {LABEL_OPTIONS.map(label => {
+              const annotationsWithLabel = comments.filter(c => c.labels && c.labels.includes(label.id));
+              const count = annotationsWithLabel.length;
+              
+              if (count === 0) return null;
+              
+              const isSelected = selectedLabelFilter === label.id;
+              
+              return (
+                <div key={label.id} style={{ marginBottom: 8 }}>
+                  <button
+                    onClick={() => setSelectedLabelFilter(isSelected ? null : label.id)}
+                    style={{ 
+                      width: '100%',
+                      padding: '12px', 
+                      backgroundColor: isSelected ? `${label.color}15` : 'transparent',
+                      border: `2px solid ${isSelected ? label.color : borderColor}`,
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 150ms ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: label.color }} />
+                      <span style={{ fontSize: fontSize - 1, fontWeight: 500, color: label.color, flex: 1 }}>{label.label}</span>
+                      <span style={{ 
+                        padding: '2px 8px', 
+                        backgroundColor: `${label.color}20`, 
+                        color: label.color, 
+                        borderRadius: 12, 
+                        fontSize: fontSize - 2,
+                        fontWeight: 600
+                      }}>{count}</span>
+                    </div>
+                  </button>
+                  
+                  {isSelected && (
+                    <div style={{ marginTop: 8, paddingLeft: 8 }}>
+                      {annotationsWithLabel.map((comment, idx) => {
+                        const commentIndex = comments.indexOf(comment) + 1;
+                        return (
+                          <div 
+                            key={comment.id}
+                            onClick={() => setActiveComment(comment.id)}
+                            style={{ 
+                              padding: '8px 12px', 
+                              backgroundColor: activeComment === comment.id ? `${label.color}20` : panelBackgroundColor,
+                              border: `1px solid ${borderColor}`,
+                              borderLeft: `3px solid ${label.color}`,
+                              borderRadius: 6,
+                              marginBottom: 6,
+                              cursor: 'pointer',
+                              transition: 'all 150ms ease'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                              <span style={{ 
+                                width: 20, 
+                                height: 20, 
+                                borderRadius: '50%', 
+                                backgroundColor: label.color,
+                                color: '#fff',
+                                fontSize: fontSize - 3,
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}>{commentIndex}</span>
+                              <span style={{ fontSize: fontSize - 2, color: secondaryTextColor }}>
+                                {comment.side === 'left' ? leftLabel : rightLabel}
+                              </span>
+                              {comment.connectedTo && comment.connectedTo.length > 0 && (
+                                <div style={{ marginLeft: 'auto' }}>
+                                  <Icons.GitBranch size={12} color="#10B981" />
+                                </div>
+                              )}
+                            </div>
+                            {comment.text && (
+                              <p style={{ 
+                                margin: 0, 
+                                fontSize: fontSize - 2, 
+                                color: secondaryTextColor,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {comment.text}
+                              </p>
+                            )}
+                            {comment.labels.length > 1 && (
+                              <div style={{ marginTop: 4, fontSize: fontSize - 3, color: secondaryTextColor }}>
+                                +{comment.labels.length - 1} more label{comment.labels.length - 1 > 1 ? 's' : ''}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            
+            {comments.length === 0 && (
+              <div style={{ padding: 40, textAlign: 'center', color: secondaryTextColor }}>
+                <Icons.Layers size={32} sw={1} />
+                <p style={{ margin: '12px 0 4px', fontWeight: 500, color: primaryTextColor }}>No annotations yet</p>
+                <p style={{ margin: 0, fontSize: fontSize - 1 }}>Add annotations to see them grouped by labels</p>
+              </div>
             )}
           </div>
         </div>
