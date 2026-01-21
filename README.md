@@ -13,9 +13,23 @@ A professional side-by-side comparison tool for reviewing website changes betwee
 
 ### 💬 Comments & Annotations
 - **Pin comments** - Click anywhere on previews to add location-specific comments
+- **Add labels** - Mark areas with predefined categories for systematic analysis
 - **Resolve tracking** - Mark comments as resolved when addressed
-- **Visual indicators** - Numbered pins with color-coded status
+- **Visual indicators** - Numbered pins with color-coded status (yellow for comments, purple for labels)
 - **Side attribution** - Track which version each comment belongs to
+
+### 🏷️ Labeling System
+- **Can be fixed by heuristics** (Green) - Issues that automated rules can solve
+- **Poor website construction** (Red) - Structural or design problems
+- **Legit construction, cannot solve by heuristics** (Orange) - Valid design that algorithms can't improve
+- **Multiple labels** - Apply more than one label to a single area
+- **Visual distinction** - Purple pins for labels vs yellow pins for comments
+
+### 📊 Export & Import
+- **CSV Export** - Export all annotations with serial numbers, URLs, positions, labels, and comments
+- **JSON Export** - Save complete sessions for backup or sharing
+- **JSON Import** - Load previously saved sessions to continue work
+- **Data includes**: URLs, preview width, all comments/labels with positions and timestamps
 
 ### 💾 Session Management
 - **Save sessions** - Store comparison sessions with all URLs and comments
@@ -68,25 +82,57 @@ Then open http://localhost:8000 in your browser.
 - Or use the slider to set a custom width
 - Width range: 320px - 1920px
 
-### 3. Add Comments
+### 3. Add Comments or Labels
+
+**Add a Comment:**
 1. Click the comment button (💬) in the toolbar
 2. Click anywhere on either preview panel
 3. Type your comment
-4. Save or cancel
+4. Save
 
-### 4. Manage Comments
-- Click numbered pins to view comment details
-- Mark comments as resolved (✓)
-- Delete comments (🗑️)
-- View all comments in the bar below the header
+**Add Labels:**
+1. Click the label button (🏷️) in the toolbar
+2. Click anywhere on either preview panel
+3. Select one or more label categories:
+   - ✅ Can be fixed by heuristics (Green)
+   - ⚠️ Poor website construction (Red)
+   - ℹ️ Legit construction, cannot solve by heuristics (Orange)
+4. Save
+
+### 4. Manage Comments & Labels
+- Click numbered pins to view comment/label details
+- Mark items as resolved (✓)
+- Delete items (🗑️)
+- View all annotations in the bar below the header
+
+### 5. Export Data
+
+**CSV Export (for analysis):**
+- Click the CSV export button (📄)
+- Downloads a spreadsheet with:
+  - Serial number for each annotation
+  - URL (left or right)
+  - Position coordinates
+  - All applied labels
+  - Comments text
+  - Timestamp and resolution status
+
+**JSON Export (for backup):**
+- Click the download button (⬇️)
+- Saves complete session including URLs, annotations, and settings
+
+### 6. Import Sessions
+1. Click the upload button (⬆️)
+2. Select a previously exported JSON file
+3. Session loads with all URLs, comments, and labels restored
 
 ### 5. Save Sessions
 1. Click the save button (💾)
 2. Enter a session name
-3. Save to store current URLs, width, and comments
+3. Save to store current URLs, width, and all annotations
 4. Load saved sessions anytime from the sessions panel
 
-### 6. Export Data
+### 7. Export Data
 - Click the download button (⬇️) to export current session as JSON
 - Share with team members or keep as backup
 
@@ -99,8 +145,11 @@ Then open http://localhost:8000 in your browser.
 | 🌐 | Toggle URLs | Show/hide URL input fields |
 | 🔗 | Sync Scroll | Enable/disable synchronized scrolling |
 | 💬 | Add Comment | Activate comment placement mode |
+| 🏷️ | Add Label | Activate label placement mode |
 | 💾 | Sessions | Open saved sessions panel |
-| ⬇️ | Export | Download current session as JSON |
+| 📄 | Export CSV | Download annotations as CSV spreadsheet |
+| ⬇️ | Export JSON | Download session as JSON file |
+| ⬆️ | Import JSON | Upload a saved JSON session |
 
 ### Device Presets
 
@@ -154,17 +203,45 @@ Requires a modern browser with ES6+ support.
 ## Data Storage
 
 - **Sessions**: Stored in browser's localStorage
-- **Comments**: Included in session data
+- **Comments & Labels**: Included in session data
 - **Persistence**: Data persists across browser sessions
 - **Privacy**: All data stored locally, no external servers
+
+## CSV Export Format
+
+The CSV export includes the following columns:
+
+| Column | Description | Example |
+|--------|-------------|---------|
+| Serial Number | Sequential number for each annotation | 1, 2, 3... |
+| URL | The URL being annotated (left or right) | https://example.com |
+| Side | Panel name (Designer/Algorithm) | Designer |
+| Position X | Horizontal position (%) | 45.23 |
+| Position Y | Vertical position (pixels) | 234.56 |
+| Labels | Applied labels (semicolon-separated) | Can be fixed by heuristics; Poor website construction |
+| Comment | Comment text (if any) | Button alignment is off |
+| Timestamp | When annotation was created | 1/21/2026, 3:45:23 PM |
+| Resolved | Whether marked as resolved | Yes / No |
+
+**Use cases for CSV:**
+- Import into Excel/Google Sheets for analysis
+- Share with team members who don't need the full app
+- Create reports and dashboards
+- Track issue resolution over time
+- Analyze patterns in website construction problems
 
 ## Tips
 
 1. **Use descriptive session names** - Include date, feature name, or ticket number
-2. **Export important sessions** - Download JSON backups before clearing browser data
-3. **Resolve comments as you go** - Keep track of what's been addressed
-4. **Use different colors** - The Designer (indigo) and Algorithm (pink) indicators help identify sides
-5. **Disable scroll sync** - When you need to compare different sections
+2. **Export to CSV regularly** - Keep spreadsheet backups of your annotations for analysis
+3. **Use labels for categorization** - Quickly identify patterns across multiple issues
+4. **Export JSON sessions** - Download JSON backups before clearing browser data
+5. **Import to continue work** - Resume sessions on different machines or browsers
+6. **Resolve comments as you go** - Keep track of what's been addressed
+7. **Use different colors** - The Designer (indigo) and Algorithm (pink) indicators help identify sides
+8. **Label multiple categories** - Apply more than one label when issues overlap
+9. **Disable scroll sync** - When you need to compare different sections
+10. **CSV for reporting** - Use CSV export to create reports or share with non-technical team members
 
 ## Troubleshooting
 
