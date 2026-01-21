@@ -1485,7 +1485,7 @@ function Component({ config = {} }) {
                       }}
                     >
                       <div style={{ aspectRatio: '16/10', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <iframe src={site.url} style={{ width: '200%', height: '200%', border: 'none', transform: 'scale(0.5)', transformOrigin: 'top left', pointerEvents: 'none' }} title={site.name} />
+                        <iframe src={site.url} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} title={site.name} />
                         {isSelected && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: designerAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
@@ -1547,7 +1547,7 @@ function Component({ config = {} }) {
                       }}
                     >
                       <div style={{ aspectRatio: '16/10', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <iframe src={site.url} style={{ width: '200%', height: '200%', border: 'none', transform: 'scale(0.5)', transformOrigin: 'top left', pointerEvents: 'none' }} title={site.name} />
+                        <iframe src={site.url} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} title={site.name} />
                         {isSelected && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: algorithmAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
