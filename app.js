@@ -140,6 +140,8 @@ function Component({ config = {} }) {
   const [customNames, setCustomNames] = React.useState({});
   const [editingWebsiteId, setEditingWebsiteId] = React.useState(null);
   const [editingName, setEditingName] = React.useState('');
+  const [showThumbnailGalleryLeft, setShowThumbnailGalleryLeft] = React.useState(false);
+  const [showThumbnailGalleryRight, setShowThumbnailGalleryRight] = React.useState(false);
   const fileInputRef = React.useRef(null);
 
   const leftContainerRef = React.useRef(null);
@@ -186,6 +188,18 @@ function Component({ config = {} }) {
     const updated = { ...customNames, [key]: newName };
     setCustomNames(updated);
     localStorage.setItem('testWebsiteCustomNames', JSON.stringify(updated));
+  };
+
+  const selectWebsiteFromGallery = (website, side) => {
+    if (side === 'left') {
+      setLeftUrl(website.url);
+      setSelectedTestSiteLeft(website.id);
+      setShowThumbnailGalleryLeft(false);
+    } else {
+      setRightUrl(website.url);
+      setSelectedTestSiteRight(website.id);
+      setShowThumbnailGalleryRight(false);
+    }
   };
 
   const handleDevicePreset = (preset) => {
@@ -700,6 +714,7 @@ function Component({ config = {} }) {
       <style>{`
         @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
         @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .url-input:focus { border-color: ${accentColor} !important; box-shadow: 0 0 0 3px ${accentColor}10 !important; }
         .toolbar-btn { transition: all 150ms ease; }
         .toolbar-btn:hover { background-color: ${borderColor} !important; }
@@ -754,10 +769,12 @@ function Component({ config = {} }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: designerAccentColor, flexShrink: 0 }} />
                 <input type="url" className="url-input" value={leftUrl} onChange={e => { setLeftUrl(e.target.value); setSelectedTestSiteLeft(''); }} placeholder={`Enter ${leftLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
+                <button onClick={() => setShowThumbnailGalleryLeft(true)} style={{ padding: '9px 12px', backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: designerAccentColor, fontWeight: 500, fontSize: fontSize - 1 }} title="Browse gallery"><Icons.Layers size={16} /></button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: algorithmAccentColor, flexShrink: 0 }} />
                 <input type="url" className="url-input" value={rightUrl} onChange={e => { setRightUrl(e.target.value); setSelectedTestSiteRight(''); }} placeholder={`Enter ${rightLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
+                <button onClick={() => setShowThumbnailGalleryRight(true)} style={{ padding: '9px 12px', backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: algorithmAccentColor, fontWeight: 500, fontSize: fontSize - 1 }} title="Browse gallery"><Icons.Layers size={16} /></button>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -1153,6 +1170,130 @@ function Component({ config = {} }) {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showThumbnailGalleryLeft && (
+        <div onClick={() => setShowThumbnailGalleryLeft(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, animation: 'fadeIn 200ms ease-out' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 1200, maxHeight: '90vh', backgroundColor: panelBackgroundColor, borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Icons.Palette size={24} color={designerAccentColor} />
+                <h2 style={{ margin: 0, fontSize: fontSize + 6, fontWeight: 600 }}>Designer Test Websites</h2>
+              </div>
+              <button onClick={() => setShowThumbnailGalleryLeft(false)} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 8 }}><Icons.X size={20} /></button>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                {TEST_WEBSITES_DESIGNER.map((site) => {
+                  const isSelected = selectedTestSiteLeft === site.id;
+                  return (
+                    <div 
+                      key={site.id}
+                      onClick={() => selectWebsiteFromGallery(site, 'left')}
+                      style={{ 
+                        backgroundColor: isSelected ? `${designerAccentColor}10` : backgroundColor,
+                        border: `2px solid ${isSelected ? designerAccentColor : borderColor}`,
+                        borderRadius: 12,
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'all 200ms ease',
+                        boxShadow: isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div style={{ aspectRatio: '16/10', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <iframe src={site.url} style={{ width: '200%', height: '200%', border: 'none', transform: 'scale(0.5)', transformOrigin: 'top left', pointerEvents: 'none' }} title={site.name} />
+                        {isSelected && (
+                          <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: designerAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                            <Icons.Check size={18} sw={2.5} />
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ padding: 16 }}>
+                        <div style={{ fontWeight: 600, fontSize: fontSize + 1, color: primaryTextColor, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Icons.Globe size={16} color={designerAccentColor} />
+                          {getWebsiteName(site, 'designer')}
+                        </div>
+                        <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {site.url}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showThumbnailGalleryRight && (
+        <div onClick={() => setShowThumbnailGalleryRight(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, animation: 'fadeIn 200ms ease-out' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 1200, maxHeight: '90vh', backgroundColor: panelBackgroundColor, borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Icons.Cpu size={24} color={algorithmAccentColor} />
+                <h2 style={{ margin: 0, fontSize: fontSize + 6, fontWeight: 600 }}>Algorithm Test Websites</h2>
+              </div>
+              <button onClick={() => setShowThumbnailGalleryRight(false)} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 8 }}><Icons.X size={20} /></button>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                {TEST_WEBSITES_ALGORITHM.map((site) => {
+                  const isSelected = selectedTestSiteRight === site.id;
+                  return (
+                    <div 
+                      key={site.id}
+                      onClick={() => selectWebsiteFromGallery(site, 'right')}
+                      style={{ 
+                        backgroundColor: isSelected ? `${algorithmAccentColor}10` : backgroundColor,
+                        border: `2px solid ${isSelected ? algorithmAccentColor : borderColor}`,
+                        borderRadius: 12,
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'all 200ms ease',
+                        boxShadow: isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div style={{ aspectRatio: '16/10', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <iframe src={site.url} style={{ width: '200%', height: '200%', border: 'none', transform: 'scale(0.5)', transformOrigin: 'top left', pointerEvents: 'none' }} title={site.name} />
+                        {isSelected && (
+                          <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: algorithmAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                            <Icons.Check size={18} sw={2.5} />
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ padding: 16 }}>
+                        <div style={{ fontWeight: 600, fontSize: fontSize + 1, color: primaryTextColor, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Icons.Globe size={16} color={algorithmAccentColor} />
+                          {getWebsiteName(site, 'algorithm')}
+                        </div>
+                        <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {site.url}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
