@@ -1459,7 +1459,7 @@ function Component({ config = {} }) {
               <button onClick={() => setShowThumbnailGalleryLeft(false)} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 8 }}><Icons.X size={20} /></button>
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
                 {testWebsitesDesigner.map((site) => {
                   const isSelected = selectedTestSiteLeft === site.id;
                   return (
@@ -1484,8 +1484,8 @@ function Component({ config = {} }) {
                         e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
                       }}
                     >
-                      <div style={{ aspectRatio: '16/10', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <iframe src={site.url} style={{ width: '1280px', height: '800px', border: 'none', transform: 'scale(0.22)', transformOrigin: 'top left', pointerEvents: 'none' }} title={site.name} />
+                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <iframe src={site.url} style={{ width: '1280px', height: '800px', border: 'none', transform: 'scale(0.28125)', transformOrigin: 'top center', pointerEvents: 'none' }} title={site.name} />
                         {isSelected && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: designerAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
@@ -1521,7 +1521,7 @@ function Component({ config = {} }) {
               <button onClick={() => setShowThumbnailGalleryRight(false)} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 8 }}><Icons.X size={20} /></button>
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
                 {testWebsitesAlgorithm.map((site) => {
                   const isSelected = selectedTestSiteRight === site.id;
                   return (
@@ -1546,8 +1546,8 @@ function Component({ config = {} }) {
                         e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
                       }}
                     >
-                      <div style={{ aspectRatio: '16/10', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <iframe src={site.url} style={{ width: '1280px', height: '800px', border: 'none', transform: 'scale(0.22)', transformOrigin: 'top left', pointerEvents: 'none' }} title={site.name} />
+                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <iframe src={site.url} style={{ width: '1280px', height: '800px', border: 'none', transform: 'scale(0.28125)', transformOrigin: 'top center', pointerEvents: 'none' }} title={site.name} />
                         {isSelected && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: algorithmAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
