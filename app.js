@@ -60,16 +60,30 @@ const LABEL_OPTIONS = [
 ];
 
 const TEST_WEBSITES = [
-  { id: 'darle', name: 'Darle Lumina (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-284' },
-  { id: 'wellwell', name: 'WellWell (Mental Health)', url: 'https://yanivo4.wixsite.com/my-site-283' },
-  { id: 'dyzu', name: 'DYZU (Social Media Agency)', url: 'https://yanivo4.wixsite.com/my-site-281' },
-  { id: 'mystery280', name: 'Test Site 280', url: 'https://yanivo4.wixsite.com/my-site-280' },
-  { id: 'mystery278', name: 'Test Site 278', url: 'https://yanivo4.wixsite.com/my-site-278' },
-  { id: 'coming-soon', name: 'Nowaday (Coming Soon)', url: 'https://yanivo4.wixsite.com/my-site-289' },
-  { id: 'hugo', name: 'Hugo Bellamy (Photography)', url: 'https://yanivo4.wixsite.com/my-site-288' },
-  { id: 'dreama', name: 'dreama. (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-287' },
-  { id: 'vexta', name: 'Vexta (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-291' },
-  { id: 'realdone', name: 'Real&Done (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-292' }
+  { id: 'darle-284', name: 'Darle Lumina (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-284' },
+  { id: 'wellwell-283', name: 'WellWell (Mental Health)', url: 'https://yanivo4.wixsite.com/my-site-283' },
+  { id: 'dyzu-281', name: 'DYZU (Social Media Agency)', url: 'https://yanivo4.wixsite.com/my-site-281' },
+  { id: 'site-280', name: 'Test Site 280', url: 'https://yanivo4.wixsite.com/my-site-280' },
+  { id: 'site-278', name: 'Test Site 278', url: 'https://yanivo4.wixsite.com/my-site-278' },
+  { id: 'nowaday-289', name: 'Nowaday (Coming Soon)', url: 'https://yanivo4.wixsite.com/my-site-289' },
+  { id: 'hugo-288', name: 'Hugo Bellamy (Photography)', url: 'https://yanivo4.wixsite.com/my-site-288' },
+  { id: 'dreama-287', name: 'dreama. (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-287' },
+  { id: 'vexta-291', name: 'Vexta (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-291' },
+  { id: 'realdone-292', name: 'Real&Done (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-292' },
+  { id: 'realdone-298', name: 'Real&Done v2 (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-298' },
+  { id: 'vexta-299', name: 'Vexta v2 (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-299' },
+  { id: 'darle-300', name: 'Darle Lumina v2 (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-300' },
+  { id: 'wedding-294', name: 'E&J Wedding', url: 'https://yanivo4.wixsite.com/my-site-294' },
+  { id: 'therapy-295', name: 'Dr. Dahlia Curtis (Therapy)', url: 'https://yanivo4.wixsite.com/my-site-295' },
+  { id: 'dreama-297', name: 'dreama. v2 (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-297' },
+  { id: 'site-293', name: 'Test Site 293', url: 'https://yanivo4.wixsite.com/my-site-293' },
+  { id: 'site-290', name: 'Test Site 290', url: 'https://yanivo4.wixsite.com/my-site-290' },
+  { id: 'site-235', name: 'Test Site 235', url: 'https://yanivo4.wixsite.com/my-site-235' },
+  { id: 'site-236', name: 'Test Site 236', url: 'https://yanivo4.wixsite.com/my-site-236' },
+  { id: 'site-237', name: 'Test Site 237', url: 'https://yanivo4.wixsite.com/my-site-237' },
+  { id: 'site-243', name: 'Test Site 243', url: 'https://yanivo4.wixsite.com/my-site-243' },
+  { id: 'site-244', name: 'Test Site 244', url: 'https://yanivo4.wixsite.com/my-site-244' },
+  { id: 'site-254', name: 'Test Site 254', url: 'https://yanivo4.wixsite.com/my-site-254' }
 ];
 
 function Component({ config = {} }) {
@@ -91,7 +105,8 @@ function Component({ config = {} }) {
 
   const [leftUrl, setLeftUrl] = React.useState('');
   const [rightUrl, setRightUrl] = React.useState('');
-  const [selectedTestSite, setSelectedTestSite] = React.useState('');
+  const [selectedTestSiteLeft, setSelectedTestSiteLeft] = React.useState('');
+  const [selectedTestSiteRight, setSelectedTestSiteRight] = React.useState('');
   const [previewWidth, setPreviewWidth] = React.useState(390);
   const [devicePreset, setDevicePreset] = React.useState('mobile');
   const [syncScroll, setSyncScroll] = React.useState(true);
@@ -705,41 +720,72 @@ function Component({ config = {} }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: designerAccentColor, flexShrink: 0 }} />
-                <input type="url" className="url-input" value={leftUrl} onChange={e => setLeftUrl(e.target.value)} placeholder={`Enter ${leftLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
+                <input type="url" className="url-input" value={leftUrl} onChange={e => { setLeftUrl(e.target.value); setSelectedTestSiteLeft(''); }} placeholder={`Enter ${leftLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: algorithmAccentColor, flexShrink: 0 }} />
-                <input type="url" className="url-input" value={rightUrl} onChange={e => { setRightUrl(e.target.value); setSelectedTestSite(''); }} placeholder={`Enter ${rightLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
+                <input type="url" className="url-input" value={rightUrl} onChange={e => { setRightUrl(e.target.value); setSelectedTestSiteRight(''); }} placeholder={`Enter ${rightLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
-              <Icons.Cpu size={14} color={algorithmAccentColor} />
-              <span style={{ fontSize: fontSize - 1, color: secondaryTextColor, fontWeight: 500 }}>Quick Test:</span>
-              <select 
-                value={selectedTestSite} 
-                onChange={(e) => {
-                  setSelectedTestSite(e.target.value);
-                  const site = TEST_WEBSITES.find(s => s.id === e.target.value);
-                  if (site) setRightUrl(site.url);
-                }}
-                style={{ 
-                  flex: 1, 
-                  padding: '6px 10px', 
-                  fontSize: fontSize - 1, 
-                  fontFamily, 
-                  color: primaryTextColor, 
-                  backgroundColor: panelBackgroundColor, 
-                  border: `1px solid ${borderColor}`, 
-                  borderRadius: 8, 
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="">Select a test website...</option>
-                {TEST_WEBSITES.map(site => (
-                  <option key={site.id} value={site.id}>{site.name}</option>
-                ))}
-              </select>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
+                <Icons.Palette size={14} color={designerAccentColor} />
+                <span style={{ fontSize: fontSize - 1, color: secondaryTextColor, fontWeight: 500, minWidth: 'fit-content' }}>Quick Test:</span>
+                <select 
+                  value={selectedTestSiteLeft} 
+                  onChange={(e) => {
+                    setSelectedTestSiteLeft(e.target.value);
+                    const site = TEST_WEBSITES.find(s => s.id === e.target.value);
+                    if (site) setLeftUrl(site.url);
+                  }}
+                  style={{ 
+                    flex: 1, 
+                    padding: '6px 10px', 
+                    fontSize: fontSize - 1, 
+                    fontFamily, 
+                    color: primaryTextColor, 
+                    backgroundColor: panelBackgroundColor, 
+                    border: `1px solid ${borderColor}`, 
+                    borderRadius: 8, 
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Select test site...</option>
+                  {TEST_WEBSITES.map(site => (
+                    <option key={site.id} value={site.id}>{site.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
+                <Icons.Cpu size={14} color={algorithmAccentColor} />
+                <span style={{ fontSize: fontSize - 1, color: secondaryTextColor, fontWeight: 500, minWidth: 'fit-content' }}>Quick Test:</span>
+                <select 
+                  value={selectedTestSiteRight} 
+                  onChange={(e) => {
+                    setSelectedTestSiteRight(e.target.value);
+                    const site = TEST_WEBSITES.find(s => s.id === e.target.value);
+                    if (site) setRightUrl(site.url);
+                  }}
+                  style={{ 
+                    flex: 1, 
+                    padding: '6px 10px', 
+                    fontSize: fontSize - 1, 
+                    fontFamily, 
+                    color: primaryTextColor, 
+                    backgroundColor: panelBackgroundColor, 
+                    border: `1px solid ${borderColor}`, 
+                    borderRadius: 8, 
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Select test site...</option>
+                  {TEST_WEBSITES.map(site => (
+                    <option key={site.id} value={site.id}>{site.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         )}
