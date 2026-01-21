@@ -1484,8 +1484,10 @@ function Component({ config = {} }) {
                         e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
                       }}
                     >
-                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <iframe src={site.url} style={{ width: '1280px', height: '800px', border: 'none', transform: 'scale(0.28125)', transformOrigin: 'top center', pointerEvents: 'none' }} title={site.name} />
+                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ width: '1280px', height: '800px', transform: 'scale(0.28125)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+                          <iframe src={site.url} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} title={site.name} />
+                        </div>
                         {isSelected && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: designerAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
@@ -1546,8 +1548,10 @@ function Component({ config = {} }) {
                         e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
                       }}
                     >
-                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <iframe src={site.url} style={{ width: '1280px', height: '800px', border: 'none', transform: 'scale(0.28125)', transformOrigin: 'top center', pointerEvents: 'none' }} title={site.name} />
+                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ width: '1280px', height: '800px', transform: 'scale(0.28125)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+                          <iframe src={site.url} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} title={site.name} />
+                        </div>
                         {isSelected && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: algorithmAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
