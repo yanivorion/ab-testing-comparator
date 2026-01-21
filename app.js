@@ -997,13 +997,13 @@ function Component({ config = {} }) {
       <React.Fragment key={comment.id}>
         {/* Render lasso frame if it exists */}
         {comment.lassoFrame && comment.lassoFrame.length > 0 && (
-          <svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 8999 }}>
+          <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 8999 }}>
             <polygon
               points={comment.lassoFrame.map(p => `${p.x}%,${p.y}`).join(' ')}
-              fill="rgba(139, 92, 246, 0.08)"
-              stroke="#8B5CF6"
+              fill="rgba(59, 130, 246, 0.15)"
+              stroke="#3B82F6"
               strokeWidth="2"
-              strokeDasharray="5,5"
+              strokeDasharray="8,4"
             />
           </svg>
         )}
@@ -1319,13 +1319,13 @@ function Component({ config = {} }) {
           
           {/* Lasso drawing overlay */}
           {isDrawingLasso && currentLassoSide === side && lassoPoints.length > 0 && (
-            <svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 9999 }}>
-              <polyline
+            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 }}>
+              <polygon
                 points={lassoPoints.map(p => `${p.x},${p.y}`).join(' ')}
-                fill="none"
-                stroke="#8B5CF6"
+                fill="rgba(59, 130, 246, 0.25)"
+                stroke="#3B82F6"
                 strokeWidth="3"
-                strokeDasharray="5,5"
+                strokeDasharray="8,4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 style={{ animation: 'dash 20s linear infinite' }}
@@ -1335,8 +1335,10 @@ function Component({ config = {} }) {
                   key={i}
                   cx={point.x}
                   cy={point.y}
-                  r="3"
-                  fill="#8B5CF6"
+                  r="4"
+                  fill="#3B82F6"
+                  stroke="#fff"
+                  strokeWidth="1.5"
                 />
               ))}
             </svg>
@@ -1344,13 +1346,13 @@ function Component({ config = {} }) {
           
           {/* Pending lasso frame (after drawing, before saving) */}
           {!isDrawingLasso && pendingCommentSide === side && pendingCommentPosition?.lassoFrame && (
-            <svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 8999 }}>
+            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 8999 }}>
               <polygon
                 points={pendingCommentPosition.lassoFrame.map(p => `${p.x}%,${p.y}`).join(' ')}
-                fill="rgba(139, 92, 246, 0.12)"
-                stroke="#8B5CF6"
-                strokeWidth="2"
-                strokeDasharray="5,5"
+                fill="rgba(59, 130, 246, 0.20)"
+                stroke="#3B82F6"
+                strokeWidth="3"
+                strokeDasharray="8,4"
               />
             </svg>
           )}
