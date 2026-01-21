@@ -320,6 +320,7 @@ function Component({ config = {} }) {
   const [addWebsiteSide, setAddWebsiteSide] = React.useState('designer');
   const [newWebsiteName, setNewWebsiteName] = React.useState('');
   const [newWebsiteUrl, setNewWebsiteUrl] = React.useState('');
+  const [selectedMatchedPair, setSelectedMatchedPair] = React.useState('');
   const fileInputRef = React.useRef(null);
 
   const leftContainerRef = React.useRef(null);
@@ -503,6 +504,59 @@ function Component({ config = {} }) {
       setRightUrl(website.url);
       setSelectedTestSiteRight(website.id);
       setShowThumbnailGalleryRight(false);
+    }
+  };
+
+  // Function to find matched pairs between Designer and Algorithm sides
+  const getMatchedPairs = () => {
+    const pairs = [];
+    
+    testWebsitesDesigner.forEach(designerSite => {
+      const designerName = getWebsiteName(designerSite, 'designer').toLowerCase().trim();
+      
+      // Try to find a matching algorithm site by comparing names
+      const matchingAlgoSite = testWebsitesAlgorithm.find(algoSite => {
+        const algoName = getWebsiteName(algoSite, 'algorithm').toLowerCase().trim();
+        
+        // Remove common suffixes/prefixes for better matching
+        const cleanDesignerName = designerName
+          .replace(/\s*(designer|design|v2|version 2)\s*/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const cleanAlgoName = algoName
+          .replace(/\s*(algo|algorithm|v1|version 1)\s*/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        // Check if names match
+        return cleanDesignerName === cleanAlgoName || 
+               cleanDesignerName.includes(cleanAlgoName) || 
+               cleanAlgoName.includes(cleanDesignerName);
+      });
+      
+      if (matchingAlgoSite) {
+        pairs.push({
+          id: `pair-${designerSite.id}-${matchingAlgoSite.id}`,
+          name: getWebsiteName(designerSite, 'designer'),
+          designerSite,
+          algorithmSite: matchingAlgoSite
+        });
+      }
+    });
+    
+    return pairs;
+  };
+
+  const matchedPairs = getMatchedPairs();
+
+  const selectMatchedPair = (pairId) => {
+    setSelectedMatchedPair(pairId);
+    const pair = matchedPairs.find(p => p.id === pairId);
+    if (pair) {
+      setLeftUrl(pair.designerSite.url);
+      setRightUrl(pair.algorithmSite.url);
+      setSelectedTestSiteLeft(pair.designerSite.id);
+      setSelectedTestSiteRight(pair.algorithmSite.id);
     }
   };
 
@@ -1069,6 +1123,43 @@ function Component({ config = {} }) {
 
         {showUrlInputs && (
           <div style={{ padding: '12px 20px', borderTop: `1px solid ${borderColor}` }}>
+            {/* Matched Pairs Dropdown */}
+            {matchedPairs.length > 0 && (
+              <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${borderColor}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
+                  <Icons.GitBranch size={16} color={accentColor} />
+                  <span style={{ fontSize: fontSize - 1, color: secondaryTextColor, fontWeight: 500, minWidth: 'fit-content' }}>Compare Matched Pairs:</span>
+                  <select 
+                    value={selectedMatchedPair} 
+                    onChange={(e) => selectMatchedPair(e.target.value)}
+                    style={{ 
+                      flex: 1, 
+                      padding: '8px 12px', 
+                      fontSize: fontSize, 
+                      fontFamily, 
+                      color: primaryTextColor, 
+                      backgroundColor: panelBackgroundColor, 
+                      border: `2px solid ${accentColor}`, 
+                      borderRadius: 10, 
+                      outline: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    <option value="">Select a matched pair...</option>
+                    {matchedPairs.map(pair => (
+                      <option key={pair.id} value={pair.id}>
+                        {pair.name} (Designer ↔ Algorithm)
+                      </option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: fontSize - 2, color: accentColor, fontWeight: 700, padding: '6px 12px', backgroundColor: `${accentColor}15`, borderRadius: 8, whiteSpace: 'nowrap' }}>
+                    {matchedPairs.length} matched
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: designerAccentColor, flexShrink: 0 }} />
