@@ -61,8 +61,119 @@ const LABEL_OPTIONS = [
   { id: 'legit-construction', label: 'Legit construction, cannot solve by heuristics', color: '#F59E0B' }
 ];
 
-// Algorithm side test websites (RIGHT)
-const TEST_WEBSITES_ALGORITHM = [
+// Wix CMS Configuration
+// To enable Wix CMS integration:
+// 1. Create two CMS collections: "TestWebsitesDesigner" and "TestWebsitesAlgorithm"
+// 2. Add fields: name (Text), url (URL), order (Number)
+// 3. Set collection permissions to allow public read
+// 4. Uncomment and configure the settings below:
+
+// const WIX_CMS_ENABLED = true;
+// const WIX_SITE_URL = 'https://your-site.wixsite.com/your-site';  // Your Wix site URL
+// const WIX_API_KEY = '';  // Optional: For external API access
+
+// Wix CMS API Helper Functions
+const WixCMS = {
+  enabled: typeof window !== 'undefined' && window.WIX_CMS_ENABLED === true,
+  
+  async fetchWebsites(collectionName) {
+    if (!this.enabled) return null;
+    
+    try {
+      // Try to use wix-data if available (when hosted on Wix)
+      if (typeof window.wixData !== 'undefined') {
+        const results = await window.wixData.query(collectionName)
+          .ascending('order')
+          .find();
+        return results.items.map(item => ({
+          id: item._id,
+          name: item.name,
+          url: item.url,
+          order: item.order || 0
+        }));
+      }
+      
+      // Fallback: Use fetch API for external hosting
+      const response = await fetch(`${window.WIX_SITE_URL}/_functions/getWebsites?collection=${collectionName}`);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error loading ${collectionName}:`, error);
+      return null;
+    }
+  },
+  
+  async updateWebsite(collectionName, websiteId, updates) {
+    if (!this.enabled) return false;
+    
+    try {
+      if (typeof window.wixData !== 'undefined') {
+        await window.wixData.update(collectionName, {
+          _id: websiteId,
+          ...updates
+        });
+        return true;
+      }
+      
+      const response = await fetch(`${window.WIX_SITE_URL}/_functions/updateWebsite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collection: collectionName, id: websiteId, updates })
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error updating website:', error);
+      return false;
+    }
+  },
+  
+  async addWebsite(collectionName, website) {
+    if (!this.enabled) return null;
+    
+    try {
+      if (typeof window.wixData !== 'undefined') {
+        const result = await window.wixData.insert(collectionName, website);
+        return { id: result._id, ...website };
+      }
+      
+      const response = await fetch(`${window.WIX_SITE_URL}/_functions/addWebsite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collection: collectionName, website })
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error adding website:', error);
+      return null;
+    }
+  },
+  
+  async deleteWebsite(collectionName, websiteId) {
+    if (!this.enabled) return false;
+    
+    try {
+      if (typeof window.wixData !== 'undefined') {
+        await window.wixData.remove(collectionName, websiteId);
+        return true;
+      }
+      
+      const response = await fetch(`${window.WIX_SITE_URL}/_functions/deleteWebsite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collection: collectionName, id: websiteId })
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error deleting website:', error);
+      return false;
+    }
+  }
+};
+
+// Algorithm side test websites (RIGHT) - Will be loaded from Wix CMS
+const TEST_WEBSITES_ALGORITHM_DEFAULT = [
   { id: 'darle-284', name: 'Darle Lumina (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-284' },
   { id: 'wellwell-283', name: 'WellWell (Mental Health)', url: 'https://yanivo4.wixsite.com/my-site-283' },
   { id: 'dyzu-281', name: 'DYZU (Social Media Agency)', url: 'https://yanivo4.wixsite.com/my-site-281' },
@@ -75,8 +186,8 @@ const TEST_WEBSITES_ALGORITHM = [
   { id: 'realdone-292', name: 'Real&Done (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-292' }
 ];
 
-// Designer side test websites (LEFT)
-const TEST_WEBSITES_DESIGNER = [
+// Designer side test websites (LEFT) - Will be loaded from Wix CMS
+const TEST_WEBSITES_DESIGNER_DEFAULT = [
   { id: 'realdone-298', name: 'Real&Done v2 (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-298' },
   { id: 'vexta-299', name: 'Vexta v2 (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-299' },
   { id: 'darle-300', name: 'Darle Lumina v2 (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-300' },
@@ -142,6 +253,13 @@ function Component({ config = {} }) {
   const [editingName, setEditingName] = React.useState('');
   const [showThumbnailGalleryLeft, setShowThumbnailGalleryLeft] = React.useState(false);
   const [showThumbnailGalleryRight, setShowThumbnailGalleryRight] = React.useState(false);
+  const [testWebsitesDesigner, setTestWebsitesDesigner] = React.useState(TEST_WEBSITES_DESIGNER_DEFAULT);
+  const [testWebsitesAlgorithm, setTestWebsitesAlgorithm] = React.useState(TEST_WEBSITES_ALGORITHM_DEFAULT);
+  const [isLoadingWebsites, setIsLoadingWebsites] = React.useState(true);
+  const [showAddWebsiteModal, setShowAddWebsiteModal] = React.useState(false);
+  const [addWebsiteSide, setAddWebsiteSide] = React.useState('designer');
+  const [newWebsiteName, setNewWebsiteName] = React.useState('');
+  const [newWebsiteUrl, setNewWebsiteUrl] = React.useState('');
   const fileInputRef = React.useRef(null);
 
   const leftContainerRef = React.useRef(null);
@@ -172,6 +290,36 @@ function Component({ config = {} }) {
     } catch (e) {}
   }, []);
 
+  // Load websites from Wix CMS
+  React.useEffect(() => {
+    const loadWebsitesFromCMS = async () => {
+      setIsLoadingWebsites(true);
+      
+      const designerSites = await WixCMS.fetchWebsites('TestWebsitesDesigner');
+      const algorithmSites = await WixCMS.fetchWebsites('TestWebsitesAlgorithm');
+      
+      if (designerSites) {
+        setTestWebsitesDesigner(designerSites);
+        console.log('✅ Loaded Designer websites from Wix CMS:', designerSites.length);
+      } else {
+        setTestWebsitesDesigner(TEST_WEBSITES_DESIGNER_DEFAULT);
+        console.log('ℹ️ Using default Designer websites (CMS not configured)');
+      }
+      
+      if (algorithmSites) {
+        setTestWebsitesAlgorithm(algorithmSites);
+        console.log('✅ Loaded Algorithm websites from Wix CMS:', algorithmSites.length);
+      } else {
+        setTestWebsitesAlgorithm(TEST_WEBSITES_ALGORITHM_DEFAULT);
+        console.log('ℹ️ Using default Algorithm websites (CMS not configured)');
+      }
+      
+      setIsLoadingWebsites(false);
+    };
+    
+    loadWebsitesFromCMS();
+  }, []);
+
   const panelAvailableWidth = (containerWidth / 2) - 48;
   const needsScaling = previewWidth > panelAvailableWidth && panelAvailableWidth > 0;
   const scaleFactor = needsScaling ? panelAvailableWidth / previewWidth : 1;
@@ -179,15 +327,111 @@ function Component({ config = {} }) {
   const devicePresets = { mobile: 390, tablet: 768, desktop: 1280 };
 
   const getWebsiteName = (website, list) => {
+    // If Wix CMS is enabled, use the name from CMS (which is already customized)
+    if (WixCMS.enabled) {
+      return website.name;
+    }
+    // Otherwise, check for custom name in localStorage
     const key = `${list}_${website.id}`;
     return customNames[key] || website.name;
   };
 
-  const saveCustomName = (websiteId, listType, newName) => {
+  const saveCustomName = async (websiteId, listType, newName) => {
+    const collectionName = listType === 'designer' ? 'TestWebsitesDesigner' : 'TestWebsitesAlgorithm';
+    
+    // Try to save to Wix CMS first
+    if (WixCMS.enabled) {
+      const success = await WixCMS.updateWebsite(collectionName, websiteId, { name: newName });
+      if (success) {
+        // Update local state
+        if (listType === 'designer') {
+          setTestWebsitesDesigner(prev => prev.map(site => 
+            site.id === websiteId ? { ...site, name: newName } : site
+          ));
+        } else {
+          setTestWebsitesAlgorithm(prev => prev.map(site => 
+            site.id === websiteId ? { ...site, name: newName } : site
+          ));
+        }
+        console.log('✅ Saved to Wix CMS');
+        return;
+      }
+    }
+    
+    // Fallback to localStorage if CMS not available
     const key = `${listType}_${websiteId}`;
     const updated = { ...customNames, [key]: newName };
     setCustomNames(updated);
     localStorage.setItem('testWebsiteCustomNames', JSON.stringify(updated));
+    console.log('ℹ️ Saved to localStorage');
+  };
+
+  const addNewWebsite = async () => {
+    if (!newWebsiteName.trim() || !newWebsiteUrl.trim()) return;
+    
+    const collectionName = addWebsiteSide === 'designer' ? 'TestWebsitesDesigner' : 'TestWebsitesAlgorithm';
+    const newSite = {
+      name: newWebsiteName,
+      url: newWebsiteUrl,
+      order: addWebsiteSide === 'designer' ? testWebsitesDesigner.length + 1 : testWebsitesAlgorithm.length + 1
+    };
+    
+    // Try to add to Wix CMS
+    if (WixCMS.enabled) {
+      const result = await WixCMS.addWebsite(collectionName, newSite);
+      if (result) {
+        if (addWebsiteSide === 'designer') {
+          setTestWebsitesDesigner(prev => [...prev, result]);
+        } else {
+          setTestWebsitesAlgorithm(prev => [...prev, result]);
+        }
+        console.log('✅ Added to Wix CMS');
+        setShowAddWebsiteModal(false);
+        setNewWebsiteName('');
+        setNewWebsiteUrl('');
+        return;
+      }
+    }
+    
+    // Fallback to local state only
+    const localSite = { ...newSite, id: `local-${Date.now()}` };
+    if (addWebsiteSide === 'designer') {
+      setTestWebsitesDesigner(prev => [...prev, localSite]);
+    } else {
+      setTestWebsitesAlgorithm(prev => [...prev, localSite]);
+    }
+    console.log('ℹ️ Added to local state');
+    setShowAddWebsiteModal(false);
+    setNewWebsiteName('');
+    setNewWebsiteUrl('');
+  };
+
+  const deleteWebsite = async (websiteId, listType) => {
+    if (!confirm('Are you sure you want to delete this website?')) return;
+    
+    const collectionName = listType === 'designer' ? 'TestWebsitesDesigner' : 'TestWebsitesAlgorithm';
+    
+    // Try to delete from Wix CMS
+    if (WixCMS.enabled) {
+      const success = await WixCMS.deleteWebsite(collectionName, websiteId);
+      if (success) {
+        if (listType === 'designer') {
+          setTestWebsitesDesigner(prev => prev.filter(site => site.id !== websiteId));
+        } else {
+          setTestWebsitesAlgorithm(prev => prev.filter(site => site.id !== websiteId));
+        }
+        console.log('✅ Deleted from Wix CMS');
+        return;
+      }
+    }
+    
+    // Fallback to local state
+    if (listType === 'designer') {
+      setTestWebsitesDesigner(prev => prev.filter(site => site.id !== websiteId));
+    } else {
+      setTestWebsitesAlgorithm(prev => prev.filter(site => site.id !== websiteId));
+    }
+    console.log('ℹ️ Deleted from local state');
   };
 
   const selectWebsiteFromGallery = (website, side) => {
@@ -785,7 +1029,7 @@ function Component({ config = {} }) {
                   value={selectedTestSiteLeft} 
                   onChange={(e) => {
                     setSelectedTestSiteLeft(e.target.value);
-                    const site = TEST_WEBSITES_DESIGNER.find(s => s.id === e.target.value);
+                    const site = testWebsitesDesigner.find(s => s.id === e.target.value);
                     if (site) setLeftUrl(site.url);
                   }}
                   style={{ 
@@ -802,7 +1046,7 @@ function Component({ config = {} }) {
                   }}
                 >
                   <option value="">Select test site...</option>
-                  {TEST_WEBSITES_DESIGNER.map(site => (
+                  {testWebsitesDesigner.map(site => (
                     <option key={site.id} value={site.id}>{getWebsiteName(site, 'designer')}</option>
                   ))}
                 </select>
@@ -814,7 +1058,7 @@ function Component({ config = {} }) {
                   value={selectedTestSiteRight} 
                   onChange={(e) => {
                     setSelectedTestSiteRight(e.target.value);
-                    const site = TEST_WEBSITES_ALGORITHM.find(s => s.id === e.target.value);
+                    const site = testWebsitesAlgorithm.find(s => s.id === e.target.value);
                     if (site) setRightUrl(site.url);
                   }}
                   style={{ 
@@ -831,7 +1075,7 @@ function Component({ config = {} }) {
                   }}
                 >
                   <option value="">Select test site...</option>
-                  {TEST_WEBSITES_ALGORITHM.map(site => (
+                  {testWebsitesAlgorithm.map(site => (
                     <option key={site.id} value={site.id}>{getWebsiteName(site, 'algorithm')}</option>
                   ))}
                 </select>
@@ -1034,12 +1278,17 @@ function Component({ config = {} }) {
           
           <div style={{ flex: 1, overflow: 'auto' }}>
             <div style={{ padding: '16px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <Icons.Palette size={18} color={designerAccentColor} />
-                <h3 style={{ margin: 0, fontSize: fontSize + 2, fontWeight: 600 }}>Designer Side (Left)</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icons.Palette size={18} color={designerAccentColor} />
+                  <h3 style={{ margin: 0, fontSize: fontSize + 2, fontWeight: 600 }}>Designer Side (Left)</h3>
+                </div>
+                <button onClick={() => { setAddWebsiteSide('designer'); setShowAddWebsiteModal(true); }} style={{ padding: '6px 10px', backgroundColor: designerAccentColor, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: fontSize - 1, fontWeight: 500 }}>
+                  <Icons.Plus size={14} /> Add
+                </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {TEST_WEBSITES_DESIGNER.map((site) => (
+                {testWebsitesDesigner.map((site) => (
                   <div key={site.id} style={{ padding: 12, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Icons.Globe size={16} color={designerAccentColor} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -1087,16 +1336,25 @@ function Component({ config = {} }) {
                         </button>
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => {
-                          setEditingWebsiteId(`designer_${site.id}`);
-                          setEditingName(getWebsiteName(site, 'designer'));
-                        }}
-                        style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                        title="Rename"
-                      >
-                        <Icons.Edit2 size={14} />
-                      </button>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button 
+                          onClick={() => {
+                            setEditingWebsiteId(`designer_${site.id}`);
+                            setEditingName(getWebsiteName(site, 'designer'));
+                          }}
+                          style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          title="Rename"
+                        >
+                          <Icons.Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => deleteWebsite(site.id, 'designer')}
+                          style={{ padding: '6px 8px', backgroundColor: 'transparent', color: '#EF4444', border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          title="Delete"
+                        >
+                          <Icons.Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -1104,12 +1362,17 @@ function Component({ config = {} }) {
             </div>
 
             <div style={{ padding: '16px 20px', borderTop: `1px solid ${borderColor}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <Icons.Cpu size={18} color={algorithmAccentColor} />
-                <h3 style={{ margin: 0, fontSize: fontSize + 2, fontWeight: 600 }}>Algorithm Side (Right)</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icons.Cpu size={18} color={algorithmAccentColor} />
+                  <h3 style={{ margin: 0, fontSize: fontSize + 2, fontWeight: 600 }}>Algorithm Side (Right)</h3>
+                </div>
+                <button onClick={() => { setAddWebsiteSide('algorithm'); setShowAddWebsiteModal(true); }} style={{ padding: '6px 10px', backgroundColor: algorithmAccentColor, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: fontSize - 1, fontWeight: 500 }}>
+                  <Icons.Plus size={14} /> Add
+                </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {TEST_WEBSITES_ALGORITHM.map((site) => (
+                {testWebsitesAlgorithm.map((site) => (
                   <div key={site.id} style={{ padding: 12, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Icons.Globe size={16} color={algorithmAccentColor} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -1157,16 +1420,25 @@ function Component({ config = {} }) {
                         </button>
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => {
-                          setEditingWebsiteId(`algorithm_${site.id}`);
-                          setEditingName(getWebsiteName(site, 'algorithm'));
-                        }}
-                        style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                        title="Rename"
-                      >
-                        <Icons.Edit2 size={14} />
-                      </button>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button 
+                          onClick={() => {
+                            setEditingWebsiteId(`algorithm_${site.id}`);
+                            setEditingName(getWebsiteName(site, 'algorithm'));
+                          }}
+                          style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          title="Rename"
+                        >
+                          <Icons.Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => deleteWebsite(site.id, 'algorithm')}
+                          style={{ padding: '6px 8px', backgroundColor: 'transparent', color: '#EF4444', border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          title="Delete"
+                        >
+                          <Icons.Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -1188,7 +1460,7 @@ function Component({ config = {} }) {
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-                {TEST_WEBSITES_DESIGNER.map((site) => {
+                {testWebsitesDesigner.map((site) => {
                   const isSelected = selectedTestSiteLeft === site.id;
                   return (
                     <div 
@@ -1250,7 +1522,7 @@ function Component({ config = {} }) {
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-                {TEST_WEBSITES_ALGORITHM.map((site) => {
+                {testWebsitesAlgorithm.map((site) => {
                   const isSelected = selectedTestSiteRight === site.id;
                   return (
                     <div 
@@ -1294,6 +1566,99 @@ function Component({ config = {} }) {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddWebsiteModal && (
+        <div onClick={() => setShowAddWebsiteModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'fadeIn 200ms ease-out' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 500, backgroundColor: panelBackgroundColor, borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${borderColor}` }}>
+              <h3 style={{ margin: 0, fontSize: fontSize + 4, fontWeight: 600 }}>Add New Website</h3>
+              <p style={{ margin: '8px 0 0', fontSize: fontSize - 1, color: secondaryTextColor }}>
+                Add to {addWebsiteSide === 'designer' ? 'Designer' : 'Algorithm'} side
+              </p>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontSize, fontWeight: 500, color: primaryTextColor }}>
+                  Website Name<span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input 
+                  type="text"
+                  value={newWebsiteName}
+                  onChange={(e) => setNewWebsiteName(e.target.value)}
+                  placeholder="e.g., My Awesome Website"
+                  style={{ 
+                    width: '100%', 
+                    padding: '10px 12px', 
+                    fontSize, 
+                    fontFamily, 
+                    color: primaryTextColor, 
+                    backgroundColor: backgroundColor, 
+                    border: `1px solid ${borderColor}`, 
+                    borderRadius: 8, 
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontSize, fontWeight: 500, color: primaryTextColor }}>
+                  Website URL<span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input 
+                  type="url"
+                  value={newWebsiteUrl}
+                  onChange={(e) => setNewWebsiteUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  style={{ 
+                    width: '100%', 
+                    padding: '10px 12px', 
+                    fontSize, 
+                    fontFamily, 
+                    color: primaryTextColor, 
+                    backgroundColor: backgroundColor, 
+                    border: `1px solid ${borderColor}`, 
+                    borderRadius: 8, 
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              {!WixCMS.enabled && (
+                <div style={{ padding: 12, backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, marginBottom: 16 }}>
+                  <p style={{ margin: 0, fontSize: fontSize - 1, color: '#92400E' }}>
+                    ⚠️ Wix CMS not connected. Website will only be saved locally. See <strong>WIX_CMS_SETUP.md</strong> for setup instructions.
+                  </p>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button 
+                  onClick={() => { setShowAddWebsiteModal(false); setNewWebsiteName(''); setNewWebsiteUrl(''); }}
+                  style={{ padding: '10px 20px', fontSize, fontWeight: 500, backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 8, cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={addNewWebsite}
+                  disabled={!newWebsiteName.trim() || !newWebsiteUrl.trim()}
+                  style={{ 
+                    padding: '10px 20px', 
+                    fontSize, 
+                    fontWeight: 500, 
+                    backgroundColor: addWebsiteSide === 'designer' ? designerAccentColor : algorithmAccentColor,
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: 8, 
+                    cursor: newWebsiteName.trim() && newWebsiteUrl.trim() ? 'pointer' : 'not-allowed',
+                    opacity: newWebsiteName.trim() && newWebsiteUrl.trim() ? 1 : 0.5
+                  }}
+                >
+                  Add Website
+                </button>
               </div>
             </div>
           </div>
