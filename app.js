@@ -59,6 +59,19 @@ const LABEL_OPTIONS = [
   { id: 'legit-construction', label: 'Legit construction, cannot solve by heuristics', color: '#F59E0B' }
 ];
 
+const TEST_WEBSITES = [
+  { id: 'darle', name: 'Darle Lumina (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-284' },
+  { id: 'wellwell', name: 'WellWell (Mental Health)', url: 'https://yanivo4.wixsite.com/my-site-283' },
+  { id: 'dyzu', name: 'DYZU (Social Media Agency)', url: 'https://yanivo4.wixsite.com/my-site-281' },
+  { id: 'mystery280', name: 'Test Site 280', url: 'https://yanivo4.wixsite.com/my-site-280' },
+  { id: 'mystery278', name: 'Test Site 278', url: 'https://yanivo4.wixsite.com/my-site-278' },
+  { id: 'coming-soon', name: 'Nowaday (Coming Soon)', url: 'https://yanivo4.wixsite.com/my-site-289' },
+  { id: 'hugo', name: 'Hugo Bellamy (Photography)', url: 'https://yanivo4.wixsite.com/my-site-288' },
+  { id: 'dreama', name: 'dreama. (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-287' },
+  { id: 'vexta', name: 'Vexta (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-291' },
+  { id: 'realdone', name: 'Real&Done (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-292' }
+];
+
 function Component({ config = {} }) {
   const leftLabel = config?.leftLabel || 'Designer';
   const rightLabel = config?.rightLabel || 'Algorithm';
@@ -78,6 +91,7 @@ function Component({ config = {} }) {
 
   const [leftUrl, setLeftUrl] = React.useState('');
   const [rightUrl, setRightUrl] = React.useState('');
+  const [selectedTestSite, setSelectedTestSite] = React.useState('');
   const [previewWidth, setPreviewWidth] = React.useState(390);
   const [devicePreset, setDevicePreset] = React.useState('mobile');
   const [syncScroll, setSyncScroll] = React.useState(true);
@@ -687,9 +701,46 @@ function Component({ config = {} }) {
         </div>
 
         {showUrlInputs && (
-          <div style={{ padding: '12px 20px', borderTop: `1px solid ${borderColor}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: designerAccentColor, flexShrink: 0 }} /><input type="url" className="url-input" value={leftUrl} onChange={e => setLeftUrl(e.target.value)} placeholder={`Enter ${leftLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} /></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: algorithmAccentColor, flexShrink: 0 }} /><input type="url" className="url-input" value={rightUrl} onChange={e => setRightUrl(e.target.value)} placeholder={`Enter ${rightLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} /></div>
+          <div style={{ padding: '12px 20px', borderTop: `1px solid ${borderColor}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: designerAccentColor, flexShrink: 0 }} />
+                <input type="url" className="url-input" value={leftUrl} onChange={e => setLeftUrl(e.target.value)} placeholder={`Enter ${leftLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: algorithmAccentColor, flexShrink: 0 }} />
+                <input type="url" className="url-input" value={rightUrl} onChange={e => { setRightUrl(e.target.value); setSelectedTestSite(''); }} placeholder={`Enter ${rightLabel} URL...`} style={{ flex: 1, padding: '9px 14px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, outline: 'none', transition: 'all 150ms ease' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
+              <Icons.Cpu size={14} color={algorithmAccentColor} />
+              <span style={{ fontSize: fontSize - 1, color: secondaryTextColor, fontWeight: 500 }}>Quick Test:</span>
+              <select 
+                value={selectedTestSite} 
+                onChange={(e) => {
+                  setSelectedTestSite(e.target.value);
+                  const site = TEST_WEBSITES.find(s => s.id === e.target.value);
+                  if (site) setRightUrl(site.url);
+                }}
+                style={{ 
+                  flex: 1, 
+                  padding: '6px 10px', 
+                  fontSize: fontSize - 1, 
+                  fontFamily, 
+                  color: primaryTextColor, 
+                  backgroundColor: panelBackgroundColor, 
+                  border: `1px solid ${borderColor}`, 
+                  borderRadius: 8, 
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="">Select a test website...</option>
+                {TEST_WEBSITES.map(site => (
+                  <option key={site.id} value={site.id}>{site.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
       </header>
