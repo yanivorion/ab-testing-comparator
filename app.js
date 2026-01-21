@@ -350,6 +350,35 @@ function Component({ config = {} }) {
     } catch (e) {}
   }, []);
 
+  // Cmd/Ctrl key to enable annotation mode
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.metaKey || e.ctrlKey) { // metaKey = Cmd on Mac, ctrlKey = Ctrl on Windows
+        setIsAddingAnnotation(true);
+      }
+    };
+    
+    const handleKeyUp = (e) => {
+      if (!e.metaKey && !e.ctrlKey) {
+        setIsAddingAnnotation(false);
+        // Cancel any ongoing lasso drawing
+        if (isDrawingLasso) {
+          setIsDrawingLasso(false);
+          setLassoPoints([]);
+          setCurrentLassoSide(null);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isDrawingLasso]);
+
   // Load websites from Wix CMS
   React.useEffect(() => {
     const loadWebsitesFromCMS = async () => {
@@ -703,14 +732,20 @@ function Component({ config = {} }) {
     const x = (centerX / rect.width) * 100;
     const y = centerY;
     
-    // Create annotation at center of lasso
-    setPendingCommentPosition({ x, y });
+    // Create annotation at center of lasso with lasso frame data
+    setPendingCommentPosition({ 
+      x, 
+      y, 
+      lassoFrame: lassoPoints.map(p => ({ 
+        x: (p.x / rect.width) * 100, 
+        y: p.y 
+      })) 
+    });
     setPendingCommentSide(side);
     
-    // Clear lasso
+    // Keep lasso visible until annotation is saved/canceled
     setIsDrawingLasso(false);
-    setLassoPoints([]);
-    setCurrentLassoSide(null);
+    // Don't clear lassoPoints yet - keep them for rendering
   };
 
   const handlePanelClick = (side, e) => {
@@ -730,7 +765,8 @@ function Component({ config = {} }) {
       id: Date.now(), 
       side: pendingCommentSide, 
       x: pendingCommentPosition.x, 
-      y: pendingCommentPosition.y, 
+      y: pendingCommentPosition.y,
+      lassoFrame: pendingCommentPosition.lassoFrame || null, // Save lasso frame if it exists
       labels: [...pendingLabels], 
       text: newCommentText.trim(), 
       timestamp: new Date().toISOString(), 
@@ -746,6 +782,8 @@ function Component({ config = {} }) {
     setIsAddingAnnotation(false);
     setSelectedAnnotations([]);
     setIsConnectMode(false);
+    setLassoPoints([]); // Clear lasso
+    setCurrentLassoSide(null);
   };
 
   const cancelComment = () => {
@@ -756,6 +794,8 @@ function Component({ config = {} }) {
     setIsAddingAnnotation(false);
     setSelectedAnnotations([]);
     setIsConnectMode(false);
+    setLassoPoints([]); // Clear lasso
+    setCurrentLassoSide(null);
   };
 
   const toggleAnnotationSelection = (id) => {
@@ -903,18 +943,32 @@ function Component({ config = {} }) {
     const popupPos = popupPositions[comment.id] || { x: 0, y: 0 };
     
     return (
-      <div key={comment.id} style={{ position: 'absolute', left: `${comment.x}%`, top: `${comment.y}px`, transform: 'translate(-50%, -50%)', zIndex: isActive ? 10000 : 9000 }}>
-        <div 
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            if (isConnectMode) {
-              toggleAnnotationSelection(comment.id);
-            } else {
-              setActiveComment(isActive ? null : comment.id); 
-            }
-          }} 
-          style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
-        >
+      <React.Fragment key={comment.id}>
+        {/* Render lasso frame if it exists */}
+        {comment.lassoFrame && comment.lassoFrame.length > 0 && (
+          <svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 8999 }}>
+            <polygon
+              points={comment.lassoFrame.map(p => `${p.x}%,${p.y}`).join(' ')}
+              fill="rgba(139, 92, 246, 0.08)"
+              stroke="#8B5CF6"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+            />
+          </svg>
+        )}
+        
+        <div style={{ position: 'absolute', left: `${comment.x}%`, top: `${comment.y}px`, transform: 'translate(-50%, -50%)', zIndex: isActive ? 10000 : 9000 }}>
+          <div 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (isConnectMode) {
+                toggleAnnotationSelection(comment.id);
+              } else {
+                setActiveComment(isActive ? null : comment.id); 
+              }
+            }} 
+            style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
+          >
           <div style={{ 
             width: 26, 
             height: 26, 
@@ -1046,6 +1100,7 @@ function Component({ config = {} }) {
           </div>
         )}
       </div>
+      </React.Fragment>
     );
   };
 
@@ -1233,6 +1288,19 @@ function Component({ config = {} }) {
                   fill="#8B5CF6"
                 />
               ))}
+            </svg>
+          )}
+          
+          {/* Pending lasso frame (after drawing, before saving) */}
+          {!isDrawingLasso && pendingCommentSide === side && pendingCommentPosition?.lassoFrame && (
+            <svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 8999 }}>
+              <polygon
+                points={pendingCommentPosition.lassoFrame.map(p => `${p.x}%,${p.y}`).join(' ')}
+                fill="rgba(139, 92, 246, 0.12)"
+                stroke="#8B5CF6"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+              />
             </svg>
           )}
           
