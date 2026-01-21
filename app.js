@@ -221,7 +221,6 @@ const TEST_WEBSITES_DESIGNER_DEFAULT = [
   { id: 'realdone-298', name: 'Real&Done v2 (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-298' },
   { id: 'vexta-299', name: 'Vexta v2 (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-299' },
   { id: 'darle-300', name: 'Darle Lumina v2 (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-300' },
-  { id: 'wedding-294', name: 'E&J Wedding', url: 'https://yanivo4.wixsite.com/my-site-294' },
   { id: 'therapy-295', name: 'Dr. Dahlia Curtis (Therapy)', url: 'https://yanivo4.wixsite.com/my-site-295' },
   { id: 'dreama-297', name: 'dreama. v2 (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-297' },
   { id: 'site-294-2', name: 'Test Site 294', url: 'https://yanivo4.wixsite.com/my-site-294' },
@@ -230,7 +229,6 @@ const TEST_WEBSITES_DESIGNER_DEFAULT = [
   { id: 'site-237', name: 'Test Site 237', url: 'https://yanivo4.wixsite.com/my-site-237' },
   { id: 'site-243', name: 'Test Site 243', url: 'https://yanivo4.wixsite.com/my-site-243' },
   { id: 'site-244', name: 'Test Site 244', url: 'https://yanivo4.wixsite.com/my-site-244' },
-  { id: 'site-254', name: 'Test Site 254', url: 'https://yanivo4.wixsite.com/my-site-254' },
   { id: 'site-103', name: 'My Site 103', url: 'https://davidso95.wixsite.com/my-site-103' },
   { id: 'comingsoon-dreamy-designer', name: 'Coming Soon Dreamy', url: 'https://nivz30.wixsite.com/comingsoondreamy' },
   { id: 'aesthetic-medical-designer', name: 'Aesthetic Medical', url: 'https://nivz30.wixsite.com/aesthetic-medical' },
@@ -508,6 +506,7 @@ function Component({ config = {} }) {
   // Function to find matched pairs between Designer and Algorithm sides
   const getMatchedPairs = () => {
     const pairs = [];
+    const usedAlgoSites = new Set(); // Track which algo sites are already paired
     
     // Helper to extract core name from a website name
     const extractCoreName = (name) => {
@@ -529,8 +528,16 @@ function Component({ config = {} }) {
     };
     
     // Helper to get similarity score between two strings
-    const getSimilarity = (str1, str2) => {
+    const getSimilarity = (str1, str2, originalStr1, originalStr2) => {
       if (str1 === str2) return 1.0;
+      
+      // Penalize if one has "Dr." or "Dr " and the other doesn't
+      const hasDr1 = /\bdr\.?\s/i.test(originalStr1);
+      const hasDr2 = /\bdr\.?\s/i.test(originalStr2);
+      if (hasDr1 !== hasDr2) {
+        // They both mention same person but one is doctor - reduce score
+        return 0.4; // Below threshold
+      }
       
       const longer = str1.length > str2.length ? str1 : str2;
       const shorter = str1.length > str2.length ? str2 : str1;
@@ -560,6 +567,9 @@ function Component({ config = {} }) {
       let bestScore = 0;
       
       testWebsitesAlgorithm.forEach(algoSite => {
+        // Skip if this algo site is already paired
+        if (usedAlgoSites.has(algoSite.id)) return;
+        
         const algoName = getWebsiteName(algoSite, 'algorithm');
         const algoCore = extractCoreName(algoName);
         
@@ -573,8 +583,8 @@ function Component({ config = {} }) {
           return;
         }
         
-        // Calculate similarity
-        const score = getSimilarity(designerCore, algoCore);
+        // Calculate similarity (pass original names for Dr. check)
+        const score = getSimilarity(designerCore, algoCore, designerName, algoName);
         
         // We consider it a match if similarity is > 0.6 (60%)
         if (score > bestScore && score > 0.6) {
@@ -584,6 +594,7 @@ function Component({ config = {} }) {
       });
       
       if (bestMatch) {
+        usedAlgoSites.add(bestMatch.id); // Mark as used
         pairs.push({
           id: `pair-${designerSite.id}-${bestMatch.id}`,
           name: getWebsiteName(designerSite, 'designer'),
