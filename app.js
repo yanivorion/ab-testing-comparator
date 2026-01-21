@@ -1490,48 +1490,143 @@ function Component({ config = {} }) {
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
-                {testWebsitesDesigner.map((site) => {
+                {testWebsitesDesigner.map((site, index) => {
                   const isSelected = selectedTestSiteLeft === site.id;
+                  const isEditing = editingWebsiteId === `gallery_designer_${site.id}`;
                   return (
                     <div 
                       key={site.id}
-                      onClick={() => selectWebsiteFromGallery(site, 'left')}
                       style={{ 
                         backgroundColor: isSelected ? `${designerAccentColor}10` : backgroundColor,
                         border: `2px solid ${isSelected ? designerAccentColor : borderColor}`,
                         borderRadius: 12,
                         overflow: 'hidden',
-                        cursor: 'pointer',
                         transition: 'all 200ms ease',
-                        boxShadow: isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)'
+                        boxShadow: isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)',
+                        position: 'relative'
                       }}
                       onMouseEnter={(e) => {
-                        if (!isSelected) e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+                        const controls = e.currentTarget.querySelector('.gallery-controls');
+                        if (controls) controls.style.opacity = '1';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${designerAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
+                        const controls = e.currentTarget.querySelector('.gallery-controls');
+                        if (controls && !isEditing) controls.style.opacity = '0';
                       }}
                     >
-                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
+                      <div 
+                        onClick={() => !isEditing && selectWebsiteFromGallery(site, 'left')}
+                        style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', position: 'relative', overflow: 'hidden', cursor: isEditing ? 'default' : 'pointer' }}
+                      >
                         <div style={{ width: '1280px', height: '800px', transform: 'scale(0.28125)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
                           <iframe src={site.url} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} title={site.name} />
                         </div>
-                        {isSelected && (
+                        {isSelected && !isEditing && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: designerAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
                           </div>
                         )}
+                        <div className="gallery-controls" style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6, opacity: 0, transition: 'opacity 200ms ease' }}>
+                          {index > 0 && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newList = [...testWebsitesDesigner];
+                                [newList[index], newList[index - 1]] = [newList[index - 1], newList[index]];
+                                setTestWebsitesDesigner(newList);
+                              }}
+                              style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title="Move up"
+                            >
+                              ↑
+                            </button>
+                          )}
+                          {index < testWebsitesDesigner.length - 1 && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newList = [...testWebsitesDesigner];
+                                [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
+                                setTestWebsitesDesigner(newList);
+                              }}
+                              style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title="Move down"
+                            >
+                              ↓
+                            </button>
+                          )}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteWebsite(site.id, 'designer');
+                            }}
+                            style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(239, 68, 68, 0.9)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Delete"
+                          >
+                            <Icons.Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                       <div style={{ padding: 16 }}>
-                        <div style={{ fontWeight: 600, fontSize: fontSize + 1, color: primaryTextColor, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <Icons.Globe size={16} color={designerAccentColor} />
-                          {getWebsiteName(site, 'designer')}
-                        </div>
-                        <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {site.url}
-                        </div>
+                        {isEditing ? (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <input 
+                              type="text" 
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  saveCustomName(site.id, 'designer', editingName);
+                                  setEditingWebsiteId(null);
+                                } else if (e.key === 'Escape') {
+                                  setEditingWebsiteId(null);
+                                }
+                              }}
+                              autoFocus
+                              style={{ width: '100%', padding: '8px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `2px solid ${designerAccentColor}`, borderRadius: 6, outline: 'none', marginBottom: 8 }}
+                            />
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button 
+                                onClick={() => {
+                                  saveCustomName(site.id, 'designer', editingName);
+                                  setEditingWebsiteId(null);
+                                }}
+                                style={{ flex: 1, padding: '6px', backgroundColor: designerAccentColor, color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1, fontWeight: 500 }}
+                              >
+                                Save
+                              </button>
+                              <button 
+                                onClick={() => setEditingWebsiteId(null)}
+                                style={{ flex: 1, padding: '6px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1 }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: fontSize + 1, color: primaryTextColor, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                                <Icons.Globe size={16} color={designerAccentColor} />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getWebsiteName(site, 'designer')}</span>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingWebsiteId(`gallery_designer_${site.id}`);
+                                  setEditingName(getWebsiteName(site, 'designer'));
+                                }}
+                                style={{ padding: '4px 6px', backgroundColor: 'transparent', color: designerAccentColor, border: 'none', cursor: 'pointer', borderRadius: 4, display: 'flex', alignItems: 'center' }}
+                                title="Rename"
+                              >
+                                <Icons.Edit2 size={14} />
+                              </button>
+                            </div>
+                            <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {site.url}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -1554,48 +1649,143 @@ function Component({ config = {} }) {
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
-                {testWebsitesAlgorithm.map((site) => {
+                {testWebsitesAlgorithm.map((site, index) => {
                   const isSelected = selectedTestSiteRight === site.id;
+                  const isEditing = editingWebsiteId === `gallery_algorithm_${site.id}`;
                   return (
                     <div 
                       key={site.id}
-                      onClick={() => selectWebsiteFromGallery(site, 'right')}
                       style={{ 
                         backgroundColor: isSelected ? `${algorithmAccentColor}10` : backgroundColor,
                         border: `2px solid ${isSelected ? algorithmAccentColor : borderColor}`,
                         borderRadius: 12,
                         overflow: 'hidden',
-                        cursor: 'pointer',
                         transition: 'all 200ms ease',
-                        boxShadow: isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)'
+                        boxShadow: isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)',
+                        position: 'relative'
                       }}
                       onMouseEnter={(e) => {
-                        if (!isSelected) e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+                        const controls = e.currentTarget.querySelector('.gallery-controls');
+                        if (controls) controls.style.opacity = '1';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = isSelected ? `0 4px 12px ${algorithmAccentColor}30` : '0 2px 8px rgba(0,0,0,0.05)';
+                        const controls = e.currentTarget.querySelector('.gallery-controls');
+                        if (controls && !isEditing) controls.style.opacity = '0';
                       }}
                     >
-                      <div style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', position: 'relative', overflow: 'hidden' }}>
+                      <div 
+                        onClick={() => !isEditing && selectWebsiteFromGallery(site, 'right')}
+                        style={{ width: '100%', height: '225px', backgroundColor: '#f0f0f0', position: 'relative', overflow: 'hidden', cursor: isEditing ? 'default' : 'pointer' }}
+                      >
                         <div style={{ width: '1280px', height: '800px', transform: 'scale(0.28125)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
                           <iframe src={site.url} style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} title={site.name} />
                         </div>
-                        {isSelected && (
+                        {isSelected && !isEditing && (
                           <div style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', backgroundColor: algorithmAccentColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                             <Icons.Check size={18} sw={2.5} />
                           </div>
                         )}
+                        <div className="gallery-controls" style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6, opacity: 0, transition: 'opacity 200ms ease' }}>
+                          {index > 0 && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newList = [...testWebsitesAlgorithm];
+                                [newList[index], newList[index - 1]] = [newList[index - 1], newList[index]];
+                                setTestWebsitesAlgorithm(newList);
+                              }}
+                              style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title="Move up"
+                            >
+                              ↑
+                            </button>
+                          )}
+                          {index < testWebsitesAlgorithm.length - 1 && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newList = [...testWebsitesAlgorithm];
+                                [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
+                                setTestWebsitesAlgorithm(newList);
+                              }}
+                              style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              title="Move down"
+                            >
+                              ↓
+                            </button>
+                          )}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteWebsite(site.id, 'algorithm');
+                            }}
+                            style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'rgba(239, 68, 68, 0.9)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Delete"
+                          >
+                            <Icons.Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                       <div style={{ padding: 16 }}>
-                        <div style={{ fontWeight: 600, fontSize: fontSize + 1, color: primaryTextColor, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <Icons.Globe size={16} color={algorithmAccentColor} />
-                          {getWebsiteName(site, 'algorithm')}
-                        </div>
-                        <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {site.url}
-                        </div>
+                        {isEditing ? (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <input 
+                              type="text" 
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  saveCustomName(site.id, 'algorithm', editingName);
+                                  setEditingWebsiteId(null);
+                                } else if (e.key === 'Escape') {
+                                  setEditingWebsiteId(null);
+                                }
+                              }}
+                              autoFocus
+                              style={{ width: '100%', padding: '8px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `2px solid ${algorithmAccentColor}`, borderRadius: 6, outline: 'none', marginBottom: 8 }}
+                            />
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button 
+                                onClick={() => {
+                                  saveCustomName(site.id, 'algorithm', editingName);
+                                  setEditingWebsiteId(null);
+                                }}
+                                style={{ flex: 1, padding: '6px', backgroundColor: algorithmAccentColor, color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1, fontWeight: 500 }}
+                              >
+                                Save
+                              </button>
+                              <button 
+                                onClick={() => setEditingWebsiteId(null)}
+                                style={{ flex: 1, padding: '6px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1 }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: fontSize + 1, color: primaryTextColor, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                                <Icons.Globe size={16} color={algorithmAccentColor} />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getWebsiteName(site, 'algorithm')}</span>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingWebsiteId(`gallery_algorithm_${site.id}`);
+                                  setEditingName(getWebsiteName(site, 'algorithm'));
+                                }}
+                                style={{ padding: '4px 6px', backgroundColor: 'transparent', color: algorithmAccentColor, border: 'none', cursor: 'pointer', borderRadius: 4, display: 'flex', alignItems: 'center' }}
+                                title="Rename"
+                              >
+                                <Icons.Edit2 size={14} />
+                              </button>
+                            </div>
+                            <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {site.url}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
