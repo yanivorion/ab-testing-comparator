@@ -757,24 +757,75 @@ function Component({ config = {} }) {
     setPendingCommentSide(side);
   };
 
-  const saveComment = () => {
+  const saveComment = async () => {
     // Labels are mandatory, comment is optional
     if (pendingLabels.length === 0 || !pendingCommentPosition) return;
+    
+    const currentUrl = pendingCommentSide === 'left' ? leftUrl : rightUrl;
+    const labelNames = pendingLabels.map(labelId => 
+      LABEL_OPTIONS.find(l => l.id === labelId)?.label || labelId
+    );
     
     const newComment = { 
       id: Date.now(), 
       side: pendingCommentSide, 
       x: pendingCommentPosition.x, 
       y: pendingCommentPosition.y,
-      lassoFrame: pendingCommentPosition.lassoFrame || null, // Save lasso frame if it exists
+      lassoFrame: pendingCommentPosition.lassoFrame || null,
       labels: [...pendingLabels], 
       text: newCommentText.trim(), 
       timestamp: new Date().toISOString(), 
       resolved: false,
       type: 'annotation',
-      connectedTo: selectedAnnotations.length > 0 ? [...selectedAnnotations] : []
+      connectedTo: selectedAnnotations.length > 0 ? [...selectedAnnotations] : [],
+      url: currentUrl,
+      screenshotUrl: null // Will be populated by backend
     };
+    
+    // Add to local state immediately
     setComments(prev => [...prev, newComment]);
+    
+    // Send to backend for screenshot capture and storage
+    try {
+      const annotationData = {
+        annotationId: newComment.id,
+        websiteUrl: currentUrl,
+        side: pendingCommentSide === 'left' ? 'Designer' : 'Algorithm',
+        labels: labelNames,
+        comment: newCommentText.trim(),
+        timestamp: newComment.timestamp,
+        lassoCoordinates: pendingCommentPosition.lassoFrame || null,
+        pinPosition: { x: pendingCommentPosition.x, y: pendingCommentPosition.y },
+        viewportWidth: previewWidth,
+        scrollPosition: pendingCommentSide === 'left' ? 
+          leftContainerRef.current?.scrollTop || 0 : 
+          rightContainerRef.current?.scrollTop || 0
+      };
+      
+      // Call backend to capture screenshot and save
+      const response = await fetch(`${WixCMS.baseUrl}/save_annotation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(annotationData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        // Update comment with screenshot URL
+        setComments(prev => prev.map(c => 
+          c.id === newComment.id 
+            ? { ...c, screenshotUrl: result.screenshotUrl, backofficeId: result.itemId }
+            : c
+        ));
+        console.log('✅ Annotation saved to back office with screenshot');
+      } else {
+        console.warn('⚠️ Failed to save to back office, saved locally only');
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not connect to back office:', error);
+    }
+    
+    // Clear form
     setNewCommentText('');
     setPendingLabels([]);
     setPendingCommentPosition(null);
@@ -782,7 +833,7 @@ function Component({ config = {} }) {
     setIsAddingAnnotation(false);
     setSelectedAnnotations([]);
     setIsConnectMode(false);
-    setLassoPoints([]); // Clear lasso
+    setLassoPoints([]);
     setCurrentLassoSide(null);
   };
 
