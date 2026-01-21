@@ -1,0 +1,21 @@
+{
+  "name": "ab-testing-comparator",
+  "version": "1.0.0",
+  "description": "Professional A/B testing comparison tool for reviewing Designer vs Algorithm website changes",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8000 -o",
+    "dev": "npx http-server -p 8000 -o"
+  },
+  "keywords": [
+    "ab-testing",
+    "comparison",
+    "design-review",
+    "website-testing",
+    "side-by-side"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
