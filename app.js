@@ -50,7 +50,9 @@ const Icons = {
   Minimize2: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" x2="21" y1="10" y2="3"/><line x1="3" x2="10" y1="21" y2="14"/></svg>),
   Layers: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.5-8.97 4.08a2 2 0 0 1-1.66 0L2 17.5"/><path d="m22 12.5-8.97 4.08a2 2 0 0 1-1.66 0L2 12.5"/></svg>),
   Move: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></svg>),
-  GitBranch: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>)
+  GitBranch: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>),
+  Edit2: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>),
+  Settings: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>)
 };
 
 const LABEL_OPTIONS = [
@@ -134,6 +136,10 @@ function Component({ config = {} }) {
   const [savedSessions, setSavedSessions] = React.useState([]);
   const [showUrlInputs, setShowUrlInputs] = React.useState(true);
   const [containerWidth, setContainerWidth] = React.useState(0);
+  const [showWebsiteManager, setShowWebsiteManager] = React.useState(false);
+  const [customNames, setCustomNames] = React.useState({});
+  const [editingWebsiteId, setEditingWebsiteId] = React.useState(null);
+  const [editingName, setEditingName] = React.useState('');
   const fileInputRef = React.useRef(null);
 
   const leftContainerRef = React.useRef(null);
@@ -157,11 +163,30 @@ function Component({ config = {} }) {
     } catch (e) {}
   }, []);
 
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('testWebsiteCustomNames');
+      if (saved) setCustomNames(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
+
   const panelAvailableWidth = (containerWidth / 2) - 48;
   const needsScaling = previewWidth > panelAvailableWidth && panelAvailableWidth > 0;
   const scaleFactor = needsScaling ? panelAvailableWidth / previewWidth : 1;
 
   const devicePresets = { mobile: 390, tablet: 768, desktop: 1280 };
+
+  const getWebsiteName = (website, list) => {
+    const key = `${list}_${website.id}`;
+    return customNames[key] || website.name;
+  };
+
+  const saveCustomName = (websiteId, listType, newName) => {
+    const key = `${listType}_${websiteId}`;
+    const updated = { ...customNames, [key]: newName };
+    setCustomNames(updated);
+    localStorage.setItem('testWebsiteCustomNames', JSON.stringify(updated));
+  };
 
   const handleDevicePreset = (preset) => {
     setDevicePreset(preset);
@@ -673,7 +698,8 @@ function Component({ config = {} }) {
   return (
     <div className="ab-testing-comparator" style={{ minHeight: '100vh', backgroundColor, fontFamily, fontSize, color: primaryTextColor, display: 'flex', flexDirection: 'column' }}>
       <style>{`
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
         .url-input:focus { border-color: ${accentColor} !important; box-shadow: 0 0 0 3px ${accentColor}10 !important; }
         .toolbar-btn { transition: all 150ms ease; }
         .toolbar-btn:hover { background-color: ${borderColor} !important; }
@@ -713,6 +739,7 @@ function Component({ config = {} }) {
             <button className={`toolbar-btn ${syncScroll ? 'active' : ''}`} onClick={() => setSyncScroll(!syncScroll)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: syncScroll ? accentColor : panelBackgroundColor, color: syncScroll ? '#fff' : secondaryTextColor, border: `1px solid ${syncScroll ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title={syncScroll ? 'Disable sync scroll' : 'Enable sync scroll'}>{syncScroll ? <Icons.Link size={22} /> : <Icons.Unlink size={22} />}</button>
             <button className={`toolbar-btn ${isAddingAnnotation ? 'active' : ''}`} onClick={() => setIsAddingAnnotation(!isAddingAnnotation)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingAnnotation ? '#8B5CF6' : panelBackgroundColor, color: isAddingAnnotation ? '#fff' : secondaryTextColor, border: `1px solid ${isAddingAnnotation ? '#8B5CF6' : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add annotation (labels + optional comment)"><Icons.Tag size={22} /></button>
             <button className={`toolbar-btn ${showGroupingPanel ? 'active' : ''}`} onClick={() => setShowGroupingPanel(!showGroupingPanel)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showGroupingPanel ? accentColor : panelBackgroundColor, color: showGroupingPanel ? '#fff' : secondaryTextColor, border: `1px solid ${showGroupingPanel ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Group by labels"><Icons.Layers size={22} /></button>
+            <button className={`toolbar-btn ${showWebsiteManager ? 'active' : ''}`} onClick={() => setShowWebsiteManager(!showWebsiteManager)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showWebsiteManager ? accentColor : panelBackgroundColor, color: showWebsiteManager ? '#fff' : secondaryTextColor, border: `1px solid ${showWebsiteManager ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Manage test websites"><Icons.Settings size={22} /></button>
             <button className="toolbar-btn" onClick={() => setShowSessionPanel(!showSessionPanel)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showSessionPanel ? accentColor : panelBackgroundColor, color: showSessionPanel ? '#fff' : secondaryTextColor, border: `1px solid ${showSessionPanel ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Sessions"><Icons.Save size={22} /></button>
             <button className="toolbar-btn" onClick={exportToCSV} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export to CSV"><Icons.FileText size={22} /></button>
             <button className="toolbar-btn" onClick={exportSession} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export session (JSON)"><Icons.Download size={22} /></button>
@@ -759,7 +786,7 @@ function Component({ config = {} }) {
                 >
                   <option value="">Select test site...</option>
                   {TEST_WEBSITES_DESIGNER.map(site => (
-                    <option key={site.id} value={site.id}>{site.name}</option>
+                    <option key={site.id} value={site.id}>{getWebsiteName(site, 'designer')}</option>
                   ))}
                 </select>
               </div>
@@ -788,7 +815,7 @@ function Component({ config = {} }) {
                 >
                   <option value="">Select test site...</option>
                   {TEST_WEBSITES_ALGORITHM.map(site => (
-                    <option key={site.id} value={site.id}>{site.name}</option>
+                    <option key={site.id} value={site.id}>{getWebsiteName(site, 'algorithm')}</option>
                   ))}
                 </select>
               </div>
@@ -974,6 +1001,160 @@ function Component({ config = {} }) {
                 <p style={{ margin: 0, fontSize: fontSize - 1 }}>Add annotations to see them grouped by labels</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {showWebsiteManager && (
+        <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 480, backgroundColor: panelBackgroundColor, boxShadow: '-4px 0 24px rgba(0,0,0,0.06)', zIndex: 200, display: 'flex', flexDirection: 'column', animation: 'slideInRight 200ms ease-out' }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Icons.Settings size={20} />
+              <span style={{ fontWeight: 500 }}>Manage Test Websites</span>
+            </div>
+            <button onClick={() => { setShowWebsiteManager(false); setEditingWebsiteId(null); }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 6 }}><Icons.X size={18} /></button>
+          </div>
+          
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <Icons.Palette size={18} color={designerAccentColor} />
+                <h3 style={{ margin: 0, fontSize: fontSize + 2, fontWeight: 600 }}>Designer Side (Left)</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {TEST_WEBSITES_DESIGNER.map((site) => (
+                  <div key={site.id} style={{ padding: 12, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Icons.Globe size={16} color={designerAccentColor} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {editingWebsiteId === `designer_${site.id}` ? (
+                        <input 
+                          type="text" 
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              saveCustomName(site.id, 'designer', editingName);
+                              setEditingWebsiteId(null);
+                            } else if (e.key === 'Escape') {
+                              setEditingWebsiteId(null);
+                            }
+                          }}
+                          autoFocus
+                          style={{ width: '100%', padding: '6px 8px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${designerAccentColor}`, borderRadius: 6, outline: 'none' }}
+                        />
+                      ) : (
+                        <div style={{ fontWeight: 500, fontSize, color: primaryTextColor, wordBreak: 'break-word' }}>
+                          {getWebsiteName(site, 'designer')}
+                        </div>
+                      )}
+                      <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>
+                        {site.url}
+                      </div>
+                    </div>
+                    {editingWebsiteId === `designer_${site.id}` ? (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button 
+                          onClick={() => {
+                            saveCustomName(site.id, 'designer', editingName);
+                            setEditingWebsiteId(null);
+                          }}
+                          style={{ padding: '6px 8px', backgroundColor: designerAccentColor, color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 2 }}
+                        >
+                          <Icons.Check size={14} />
+                        </button>
+                        <button 
+                          onClick={() => setEditingWebsiteId(null)}
+                          style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 2 }}
+                        >
+                          <Icons.X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setEditingWebsiteId(`designer_${site.id}`);
+                          setEditingName(getWebsiteName(site, 'designer'));
+                        }}
+                        style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Rename"
+                      >
+                        <Icons.Edit2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ padding: '16px 20px', borderTop: `1px solid ${borderColor}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <Icons.Cpu size={18} color={algorithmAccentColor} />
+                <h3 style={{ margin: 0, fontSize: fontSize + 2, fontWeight: 600 }}>Algorithm Side (Right)</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {TEST_WEBSITES_ALGORITHM.map((site) => (
+                  <div key={site.id} style={{ padding: 12, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Icons.Globe size={16} color={algorithmAccentColor} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {editingWebsiteId === `algorithm_${site.id}` ? (
+                        <input 
+                          type="text" 
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              saveCustomName(site.id, 'algorithm', editingName);
+                              setEditingWebsiteId(null);
+                            } else if (e.key === 'Escape') {
+                              setEditingWebsiteId(null);
+                            }
+                          }}
+                          autoFocus
+                          style={{ width: '100%', padding: '6px 8px', fontSize, fontFamily, color: primaryTextColor, backgroundColor: panelBackgroundColor, border: `1px solid ${algorithmAccentColor}`, borderRadius: 6, outline: 'none' }}
+                        />
+                      ) : (
+                        <div style={{ fontWeight: 500, fontSize, color: primaryTextColor, wordBreak: 'break-word' }}>
+                          {getWebsiteName(site, 'algorithm')}
+                        </div>
+                      )}
+                      <div style={{ fontSize: fontSize - 2, color: secondaryTextColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 4 }}>
+                        {site.url}
+                      </div>
+                    </div>
+                    {editingWebsiteId === `algorithm_${site.id}` ? (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button 
+                          onClick={() => {
+                            saveCustomName(site.id, 'algorithm', editingName);
+                            setEditingWebsiteId(null);
+                          }}
+                          style={{ padding: '6px 8px', backgroundColor: algorithmAccentColor, color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 2 }}
+                        >
+                          <Icons.Check size={14} />
+                        </button>
+                        <button 
+                          onClick={() => setEditingWebsiteId(null)}
+                          style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 2 }}
+                        >
+                          <Icons.X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setEditingWebsiteId(`algorithm_${site.id}`);
+                          setEditingName(getWebsiteName(site, 'algorithm'));
+                        }}
+                        style={{ padding: '6px 8px', backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Rename"
+                      >
+                        <Icons.Edit2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
