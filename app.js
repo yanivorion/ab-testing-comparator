@@ -509,43 +509,86 @@ function Component({ config = {} }) {
   const getMatchedPairs = () => {
     const pairs = [];
     
-    testWebsitesDesigner.forEach(designerSite => {
-      const designerName = getWebsiteName(designerSite, 'designer').toLowerCase().trim();
+    // Helper to extract core name from a website name
+    const extractCoreName = (name) => {
+      return name
+        .toLowerCase()
+        .trim()
+        // Remove version indicators
+        .replace(/\s*v\d+(\.\d+)?\s*/gi, '')
+        .replace(/\s*version\s*\d+(\.\d+)?\s*/gi, '')
+        // Remove common suffixes/prefixes
+        .replace(/\s*(designer|design|algo|algorithm)\s*/gi, '')
+        // Remove style descriptors
+        .replace(/\s*(bold|clean|sleek|warm)\s*/gi, '')
+        // Remove parenthetical content but keep the text before it for main comparison
+        .replace(/\s*\([^)]*\)\s*/g, ' ')
+        // Normalize spaces
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    // Helper to get similarity score between two strings
+    const getSimilarity = (str1, str2) => {
+      if (str1 === str2) return 1.0;
       
-      // Try to find a matching algorithm site by comparing names
-      const matchingAlgoSite = testWebsitesAlgorithm.find(algoSite => {
-        const algoName = getWebsiteName(algoSite, 'algorithm').toLowerCase().trim();
+      const longer = str1.length > str2.length ? str1 : str2;
+      const shorter = str1.length > str2.length ? str2 : str1;
+      
+      if (longer.length === 0) return 1.0;
+      
+      // Check if one contains the other
+      if (longer.includes(shorter)) {
+        return shorter.length / longer.length;
+      }
+      
+      // Check word-level matching
+      const words1 = str1.split(' ').filter(w => w.length > 0);
+      const words2 = str2.split(' ').filter(w => w.length > 0);
+      const matchingWords = words1.filter(w => words2.includes(w)).length;
+      const totalWords = Math.max(words1.length, words2.length);
+      
+      return matchingWords / totalWords;
+    };
+    
+    testWebsitesDesigner.forEach(designerSite => {
+      const designerName = getWebsiteName(designerSite, 'designer');
+      const designerCore = extractCoreName(designerName);
+      
+      // Try to find the best matching algorithm site
+      let bestMatch = null;
+      let bestScore = 0;
+      
+      testWebsitesAlgorithm.forEach(algoSite => {
+        const algoName = getWebsiteName(algoSite, 'algorithm');
+        const algoCore = extractCoreName(algoName);
         
-        // Remove common suffixes/prefixes for better matching
-        const cleanDesignerName = designerName
-          .replace(/\s*(designer|design|v2|version 2|bold|clean)\s*/gi, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-        const cleanAlgoName = algoName
-          .replace(/\s*(algo|algorithm|v1|version 1)\s*/gi, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-        
-        // Special case for "My Site XXX" pattern - match if base name is the same
-        const isMySitePattern = /^my site \d+$/i.test(cleanDesignerName) && /^my site \d+$/i.test(cleanAlgoName);
-        if (isMySitePattern) {
-          const designerBase = cleanDesignerName.replace(/\s*\d+$/i, '').trim();
-          const algoBase = cleanAlgoName.replace(/\s*\d+$/i, '').trim();
-          return designerBase === algoBase;
+        // Special case for "My Site XXX" pattern
+        if (/^my site\s*\d*$/i.test(designerCore) && /^my site\s*\d*$/i.test(algoCore)) {
+          const score = 0.9; // High score for My Site pattern
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = algoSite;
+          }
+          return;
         }
         
-        // Check if names match
-        return cleanDesignerName === cleanAlgoName || 
-               cleanDesignerName.includes(cleanAlgoName) || 
-               cleanAlgoName.includes(cleanDesignerName);
+        // Calculate similarity
+        const score = getSimilarity(designerCore, algoCore);
+        
+        // We consider it a match if similarity is > 0.6 (60%)
+        if (score > bestScore && score > 0.6) {
+          bestScore = score;
+          bestMatch = algoSite;
+        }
       });
       
-      if (matchingAlgoSite) {
+      if (bestMatch) {
         pairs.push({
-          id: `pair-${designerSite.id}-${matchingAlgoSite.id}`,
+          id: `pair-${designerSite.id}-${bestMatch.id}`,
           name: getWebsiteName(designerSite, 'designer'),
           designerSite,
-          algorithmSite: matchingAlgoSite
+          algorithmSite: bestMatch
         });
       }
     });
