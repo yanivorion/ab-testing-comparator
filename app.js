@@ -317,6 +317,9 @@ function Component({ config = {} }) {
   const [newWebsiteName, setNewWebsiteName] = React.useState('');
   const [newWebsiteUrl, setNewWebsiteUrl] = React.useState('');
   const [selectedMatchedPair, setSelectedMatchedPair] = React.useState('');
+  const [isDrawingLasso, setIsDrawingLasso] = React.useState(false);
+  const [lassoPoints, setLassoPoints] = React.useState([]);
+  const [currentLassoSide, setCurrentLassoSide] = React.useState(null);
   const fileInputRef = React.useRef(null);
 
   const leftContainerRef = React.useRef(null);
@@ -657,8 +660,61 @@ function Component({ config = {} }) {
     setTimeout(() => { isScrolling.current = false; }, 50);
   };
 
-  const handlePanelClick = (side, e) => {
+  const handleLassoStart = (side, e) => {
     if (!isAddingAnnotation) return;
+    e.preventDefault();
+    setIsDrawingLasso(true);
+    setCurrentLassoSide(side);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+    setLassoPoints([{ x, y }]);
+  };
+
+  const handleLassoMove = (side, e) => {
+    if (!isDrawingLasso || currentLassoSide !== side) return;
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+    setLassoPoints(prev => [...prev, { x, y }]);
+  };
+
+  const handleLassoEnd = (side, e) => {
+    if (!isDrawingLasso || currentLassoSide !== side) return;
+    e.preventDefault();
+    
+    if (lassoPoints.length < 3) {
+      // Not enough points, cancel
+      setIsDrawingLasso(false);
+      setLassoPoints([]);
+      setCurrentLassoSide(null);
+      return;
+    }
+    
+    // Calculate center point of lasso area
+    const sumX = lassoPoints.reduce((sum, p) => sum + p.x, 0);
+    const sumY = lassoPoints.reduce((sum, p) => sum + p.y, 0);
+    const centerX = sumX / lassoPoints.length;
+    const centerY = sumY / lassoPoints.length;
+    
+    // Convert to percentage for x (to handle responsive width)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (centerX / rect.width) * 100;
+    const y = centerY;
+    
+    // Create annotation at center of lasso
+    setPendingCommentPosition({ x, y });
+    setPendingCommentSide(side);
+    
+    // Clear lasso
+    setIsDrawingLasso(false);
+    setLassoPoints([]);
+    setCurrentLassoSide(null);
+  };
+
+  const handlePanelClick = (side, e) => {
+    if (!isAddingAnnotation || isDrawingLasso) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = e.clientY - rect.top + e.currentTarget.scrollTop;
@@ -1121,15 +1177,65 @@ function Component({ config = {} }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: accent }} /><span style={{ fontWeight: 500, fontSize: fontSize + 1 }}>{label}</span></div>
           {needsScaling && <span style={{ fontSize: fontSize - 2, color: secondaryTextColor, display: 'flex', alignItems: 'center', gap: 4 }}><Icons.Minimize2 size={12} />{Math.round(scaleFactor * 100)}%</span>}
         </div>
-        <div ref={containerRef} onClick={(e) => handlePanelClick(side, e)} onScroll={(e) => handleScroll(side, e)} style={{ flex: 1, overflow: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20, backgroundColor, cursor: isAddingAnnotation ? 'crosshair' : 'default' }}>
+        <div 
+          ref={containerRef} 
+          onMouseDown={(e) => handleLassoStart(side, e)} 
+          onMouseMove={(e) => handleLassoMove(side, e)} 
+          onMouseUp={(e) => handleLassoEnd(side, e)}
+          onMouseLeave={(e) => {
+            if (isDrawingLasso && currentLassoSide === side) {
+              handleLassoEnd(side, e);
+            }
+          }}
+          onClick={(e) => handlePanelClick(side, e)} 
+          onScroll={(e) => handleScroll(side, e)} 
+          style={{ 
+            flex: 1, 
+            overflow: 'auto', 
+            position: 'relative', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'flex-start', 
+            padding: 20, 
+            backgroundColor, 
+            cursor: isAddingAnnotation ? 'crosshair' : 'default',
+            userSelect: isAddingAnnotation ? 'none' : 'auto'
+          }}
+        >
           <div style={{ width: previewWidth, minHeight: 800, backgroundColor: panelBackgroundColor, borderRadius: 16, boxShadow: '0 2px 24px rgba(0,0,0,0.06)', overflow: 'hidden', position: 'relative', transform: needsScaling ? `scale(${scaleFactor})` : 'none', transformOrigin: 'top center', flexShrink: 0 }}>
-            {url ? <iframe src={url} style={{ width: '100%', height: 800, border: 'none' }} title={`${label} Preview`} /> : (
+            {url ? <iframe src={url} style={{ width: '100%', height: 800, border: 'none', pointerEvents: isAddingAnnotation ? 'none' : 'auto' }} title={`${label} Preview`} /> : (
               <div style={{ height: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: secondaryTextColor, gap: 16 }}>
                 <div style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: `${accent}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent }}>{isLeft ? <Icons.Palette size={28} /> : <Icons.Cpu size={28} />}</div>
                 <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 500, color: primaryTextColor, marginBottom: 4 }}>{label} Version</p><p style={{ margin: 0, fontSize: fontSize - 1 }}>Enter URL above to load preview</p></div>
               </div>
             )}
           </div>
+          
+          {/* Lasso drawing overlay */}
+          {isDrawingLasso && currentLassoSide === side && lassoPoints.length > 0 && (
+            <svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 9999 }}>
+              <polyline
+                points={lassoPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="none"
+                stroke="#8B5CF6"
+                strokeWidth="3"
+                strokeDasharray="5,5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ animation: 'dash 20s linear infinite' }}
+              />
+              {lassoPoints.map((point, i) => (
+                <circle
+                  key={i}
+                  cx={point.x}
+                  cy={point.y}
+                  r="3"
+                  fill="#8B5CF6"
+                />
+              ))}
+            </svg>
+          )}
+          
           {filteredComments.map(comment => renderCommentPin(comment))}
           {pendingCommentSide === side && renderPendingComment()}
         </div>
@@ -1154,6 +1260,7 @@ function Component({ config = {} }) {
         input[type="range"] { -webkit-appearance: none; height: 4px; background: ${borderColor}; border-radius: 2px; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: ${accentColor}; border-radius: 50%; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
         input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; background: ${accentColor}; border-radius: 50%; cursor: pointer; border: none; }
+        @keyframes dash { to { stroke-dashoffset: -100; } }
       `}</style>
 
       <header style={{ backgroundColor: panelBackgroundColor, borderBottom: `1px solid ${borderColor}`, position: 'sticky', top: 0, zIndex: 100 }}>
