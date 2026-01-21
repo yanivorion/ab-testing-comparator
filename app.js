@@ -1110,6 +1110,9 @@ function Component({ config = {} }) {
                     <option key={site.id} value={site.id}>{getWebsiteName(site, 'designer')}</option>
                   ))}
                 </select>
+                <span style={{ fontSize: fontSize - 2, color: designerAccentColor, fontWeight: 600, padding: '4px 8px', backgroundColor: `${designerAccentColor}15`, borderRadius: 6, whiteSpace: 'nowrap' }}>
+                  {testWebsitesDesigner.length}
+                </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
                 <Icons.Cpu size={14} color={algorithmAccentColor} />
@@ -1139,6 +1142,9 @@ function Component({ config = {} }) {
                     <option key={site.id} value={site.id}>{getWebsiteName(site, 'algorithm')}</option>
                   ))}
                 </select>
+                <span style={{ fontSize: fontSize - 2, color: algorithmAccentColor, fontWeight: 600, padding: '4px 8px', backgroundColor: `${algorithmAccentColor}15`, borderRadius: 6, whiteSpace: 'nowrap' }}>
+                  {testWebsitesAlgorithm.length}
+                </span>
               </div>
             </div>
           </div>
@@ -1515,6 +1521,9 @@ function Component({ config = {} }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Icons.Palette size={24} color={designerAccentColor} />
                 <h2 style={{ margin: 0, fontSize: fontSize + 6, fontWeight: 600 }}>Designer Test Websites</h2>
+                <span style={{ fontSize: fontSize - 1, color: designerAccentColor, fontWeight: 700, padding: '6px 12px', backgroundColor: `${designerAccentColor}15`, borderRadius: 8 }}>
+                  {testWebsitesDesigner.length}
+                </span>
               </div>
               <button onClick={() => setShowThumbnailGalleryLeft(false)} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 8 }}><Icons.X size={20} /></button>
             </div>
@@ -1674,6 +1683,9 @@ function Component({ config = {} }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Icons.Cpu size={24} color={algorithmAccentColor} />
                 <h2 style={{ margin: 0, fontSize: fontSize + 6, fontWeight: 600 }}>Algorithm Test Websites</h2>
+                <span style={{ fontSize: fontSize - 1, color: algorithmAccentColor, fontWeight: 700, padding: '6px 12px', backgroundColor: `${algorithmAccentColor}15`, borderRadius: 8 }}>
+                  {testWebsitesAlgorithm.length}
+                </span>
               </div>
               <button onClick={() => setShowThumbnailGalleryRight(false)} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: 'none', color: secondaryTextColor, cursor: 'pointer', borderRadius: 8 }}><Icons.X size={20} /></button>
             </div>
