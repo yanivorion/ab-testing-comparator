@@ -34,6 +34,9 @@ const Icons = {
   MessageSquare: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>),
   Save: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>),
   Download: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>),
+  Upload: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>),
+  FileText: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>),
+  Tag: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" x2="7.01" y1="7" y2="7"/></svg>),
   X: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>),
   Check: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>),
   Trash2: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>),
@@ -47,6 +50,12 @@ const Icons = {
   Minimize2: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" x2="21" y1="10" y2="3"/><line x1="3" x2="10" y1="21" y2="14"/></svg>),
   Layers: ({ size = 20, sw = 1.5 }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.5-8.97 4.08a2 2 0 0 1-1.66 0L2 17.5"/><path d="m22 12.5-8.97 4.08a2 2 0 0 1-1.66 0L2 12.5"/></svg>)
 };
+
+const LABEL_OPTIONS = [
+  { id: 'heuristics', label: 'Can be fixed by heuristics', color: '#10B981' },
+  { id: 'poor-construction', label: 'Poor website construction', color: '#EF4444' },
+  { id: 'legit-construction', label: 'Legit construction, cannot solve by heuristics', color: '#F59E0B' }
+];
 
 function Component({ config = {} }) {
   const leftLabel = config?.leftLabel || 'Designer';
@@ -73,14 +82,17 @@ function Component({ config = {} }) {
   const [comments, setComments] = React.useState([]);
   const [activeComment, setActiveComment] = React.useState(null);
   const [isAddingComment, setIsAddingComment] = React.useState(false);
+  const [isAddingLabel, setIsAddingLabel] = React.useState(false);
   const [pendingCommentSide, setPendingCommentSide] = React.useState(null);
   const [newCommentText, setNewCommentText] = React.useState('');
   const [pendingCommentPosition, setPendingCommentPosition] = React.useState(null);
+  const [pendingLabels, setPendingLabels] = React.useState([]);
   const [showSessionPanel, setShowSessionPanel] = React.useState(false);
   const [sessionName, setSessionName] = React.useState('');
   const [savedSessions, setSavedSessions] = React.useState([]);
   const [showUrlInputs, setShowUrlInputs] = React.useState(true);
   const [containerWidth, setContainerWidth] = React.useState(0);
+  const fileInputRef = React.useRef(null);
 
   const leftContainerRef = React.useRef(null);
   const rightContainerRef = React.useRef(null);
@@ -137,7 +149,7 @@ function Component({ config = {} }) {
   };
 
   const handlePanelClick = (side, e) => {
-    if (!isAddingComment) return;
+    if (!isAddingComment && !isAddingLabel) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = e.clientY - rect.top + e.currentTarget.scrollTop;
@@ -146,20 +158,62 @@ function Component({ config = {} }) {
   };
 
   const saveComment = () => {
-    if (!newCommentText.trim() || !pendingCommentPosition) return;
-    const newComment = { id: Date.now(), side: pendingCommentSide, x: pendingCommentPosition.x, y: pendingCommentPosition.y, text: newCommentText, timestamp: new Date().toISOString(), resolved: false };
-    setComments(prev => [...prev, newComment]);
-    setNewCommentText('');
-    setPendingCommentPosition(null);
-    setPendingCommentSide(null);
-    setIsAddingComment(false);
+    if (isAddingLabel) {
+      // Save as label
+      if (pendingLabels.length === 0 || !pendingCommentPosition) return;
+      const newComment = { 
+        id: Date.now(), 
+        side: pendingCommentSide, 
+        x: pendingCommentPosition.x, 
+        y: pendingCommentPosition.y, 
+        labels: [...pendingLabels], 
+        text: '', 
+        timestamp: new Date().toISOString(), 
+        resolved: false,
+        type: 'label'
+      };
+      setComments(prev => [...prev, newComment]);
+      setPendingLabels([]);
+      setPendingCommentPosition(null);
+      setPendingCommentSide(null);
+      setIsAddingLabel(false);
+    } else {
+      // Save as comment
+      if (!newCommentText.trim() || !pendingCommentPosition) return;
+      const newComment = { 
+        id: Date.now(), 
+        side: pendingCommentSide, 
+        x: pendingCommentPosition.x, 
+        y: pendingCommentPosition.y, 
+        text: newCommentText, 
+        labels: [],
+        timestamp: new Date().toISOString(), 
+        resolved: false,
+        type: 'comment'
+      };
+      setComments(prev => [...prev, newComment]);
+      setNewCommentText('');
+      setPendingCommentPosition(null);
+      setPendingCommentSide(null);
+      setIsAddingComment(false);
+    }
   };
 
   const cancelComment = () => {
     setNewCommentText('');
+    setPendingLabels([]);
     setPendingCommentPosition(null);
     setPendingCommentSide(null);
     setIsAddingComment(false);
+    setIsAddingLabel(false);
+  };
+
+  const toggleLabel = (labelId) => {
+    setPendingLabels(prev => 
+      prev.includes(labelId) 
+        ? prev.filter(id => id !== labelId)
+        : [...prev, labelId]
+    );
   };
 
   const deleteComment = (id) => { setComments(prev => prev.filter(c => c.id !== id)); setActiveComment(null); };
@@ -201,19 +255,91 @@ function Component({ config = {} }) {
     URL.revokeObjectURL(url);
   };
 
+  const exportToCSV = () => {
+    const headers = ['Serial Number', 'URL', 'Side', 'Position X', 'Position Y', 'Labels', 'Comment', 'Timestamp', 'Resolved'];
+    const rows = comments.map((comment, index) => [
+      index + 1,
+      comment.side === 'left' ? leftUrl : rightUrl,
+      comment.side === 'left' ? leftLabel : rightLabel,
+      comment.x.toFixed(2),
+      comment.y.toFixed(2),
+      (comment.labels || []).map(labelId => {
+        const label = LABEL_OPTIONS.find(l => l.id === labelId);
+        return label ? label.label : labelId;
+      }).join('; ') || 'None',
+      (comment.text || '').replace(/"/g, '""'),
+      new Date(comment.timestamp).toLocaleString(),
+      comment.resolved ? 'Yes' : 'No'
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ab-test-annotations-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importFromJSON = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const session = JSON.parse(e.target.result);
+        if (session.leftUrl) setLeftUrl(session.leftUrl);
+        if (session.rightUrl) setRightUrl(session.rightUrl);
+        if (session.previewWidth) setPreviewWidth(session.previewWidth);
+        if (session.comments) setComments(session.comments);
+        alert('Session imported successfully!');
+      } catch (error) {
+        alert('Error importing session: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
   const renderCommentPin = (comment) => {
     const isActive = activeComment === comment.id;
     const commentIndex = comments.indexOf(comment) + 1;
+    const pinColor = comment.type === 'label' ? '#8B5CF6' : commentPinColor;
     return (
       <div key={comment.id} onClick={(e) => { e.stopPropagation(); setActiveComment(isActive ? null : comment.id); }} style={{ position: 'absolute', left: `${comment.x}%`, top: `${comment.y}px`, transform: 'translate(-50%, -100%)', zIndex: isActive ? 1000 : 100, cursor: 'pointer' }}>
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: comment.resolved ? secondaryTextColor : commentPinColor, transform: isActive ? 'rotate(-45deg) scale(1.1)' : 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.12)', transition: 'transform 200ms ease-out, box-shadow 200ms ease-out' }}>
+          <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: comment.resolved ? secondaryTextColor : pinColor, transform: isActive ? 'rotate(-45deg) scale(1.1)' : 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.12)', transition: 'transform 200ms ease-out, box-shadow 200ms ease-out' }}>
             <span style={{ transform: 'rotate(45deg)', fontSize: 11, fontWeight: 500, color: comment.resolved ? '#fff' : primaryTextColor }}>{commentIndex}</span>
           </div>
         </div>
         {isActive && (
           <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 32, left: '50%', transform: 'translateX(-50%)', backgroundColor: panelBackgroundColor, borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: `1px solid ${borderColor}`, padding: 14, minWidth: 240, maxWidth: 300 }}>
-            <p style={{ margin: 0, fontSize, color: primaryTextColor, lineHeight: 1.6, wordBreak: 'break-word' }}>{comment.text}</p>
+            {comment.type === 'label' ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <Icons.Tag size={14} color="#8B5CF6" />
+                  <span style={{ fontSize: fontSize - 1, fontWeight: 500, color: '#8B5CF6' }}>Labels</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {(comment.labels || []).map(labelId => {
+                    const label = LABEL_OPTIONS.find(l => l.id === labelId);
+                    return label ? (
+                      <div key={labelId} style={{ padding: '6px 10px', backgroundColor: `${label.color}10`, border: `1px solid ${label.color}40`, borderRadius: 6, fontSize: fontSize - 1, color: label.color, fontWeight: 500 }}>
+                        {label.label}
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize, color: primaryTextColor, lineHeight: 1.6, wordBreak: 'break-word' }}>{comment.text}</p>
+            )}
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <span style={{ fontSize: fontSize - 2, color: secondaryTextColor, display: 'flex', alignItems: 'center', gap: 4 }}><Icons.Clock size={12} />{new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -229,14 +355,38 @@ function Component({ config = {} }) {
 
   const renderPendingComment = () => {
     if (!pendingCommentPosition) return null;
+    const pinColor = isAddingLabel ? '#8B5CF6' : commentPinColor;
     return (
       <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', left: `${pendingCommentPosition.x}%`, top: `${pendingCommentPosition.y}px`, transform: 'translate(-50%, 0)', zIndex: 1001 }}>
-        <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: commentPinColor, transform: 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', marginBottom: 8 }}><span style={{ transform: 'rotate(45deg)' }}><Icons.Plus size={14} /></span></div>
+        <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: pinColor, transform: 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', marginBottom: 8 }}><span style={{ transform: 'rotate(45deg)' }}><Icons.Plus size={14} /></span></div>
         <div style={{ backgroundColor: panelBackgroundColor, borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: `1px solid ${borderColor}`, padding: 14, width: 280 }}>
-          <textarea autoFocus value={newCommentText} onChange={e => setNewCommentText(e.target.value)} placeholder="Add your comment..." style={{ width: '100%', minHeight: 80, padding: 10, fontSize, fontFamily, color: primaryTextColor, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 8, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
+          {isAddingLabel ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <Icons.Tag size={16} color="#8B5CF6" />
+                <span style={{ fontSize, fontWeight: 500 }}>Select Labels</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {LABEL_OPTIONS.map(label => (
+                  <label key={label.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, borderRadius: 6, border: `1px solid ${borderColor}`, cursor: 'pointer', backgroundColor: pendingLabels.includes(label.id) ? `${label.color}10` : 'transparent' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={pendingLabels.includes(label.id)}
+                      onChange={() => toggleLabel(label.id)}
+                      style={{ width: 16, height: 16, accentColor: label.color, cursor: 'pointer' }}
+                    />
+                    <span style={{ flex: 1, fontSize: fontSize - 1, color: primaryTextColor }}>{label.label}</span>
+                    <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: label.color }} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <textarea autoFocus value={newCommentText} onChange={e => setNewCommentText(e.target.value)} placeholder="Add your comment..." style={{ width: '100%', minHeight: 80, padding: 10, fontSize, fontFamily, color: primaryTextColor, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 8, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
+          )}
           <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <button onClick={cancelComment} style={{ padding: '7px 14px', fontSize, fontWeight: 500, backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={saveComment} disabled={!newCommentText.trim()} style={{ padding: '7px 14px', fontSize, fontWeight: 500, backgroundColor: newCommentText.trim() ? accentColor : borderColor, color: '#fff', border: 'none', borderRadius: 8, cursor: newCommentText.trim() ? 'pointer' : 'not-allowed' }}>Save</button>
+            <button onClick={saveComment} disabled={isAddingLabel ? pendingLabels.length === 0 : !newCommentText.trim()} style={{ padding: '7px 14px', fontSize, fontWeight: 500, backgroundColor: (isAddingLabel ? pendingLabels.length > 0 : newCommentText.trim()) ? accentColor : borderColor, color: '#fff', border: 'none', borderRadius: 8, cursor: (isAddingLabel ? pendingLabels.length > 0 : newCommentText.trim()) ? 'pointer' : 'not-allowed' }}>Save</button>
           </div>
         </div>
       </div>
@@ -252,7 +402,7 @@ function Component({ config = {} }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: accent }} /><span style={{ fontWeight: 500, fontSize: fontSize + 1 }}>{label}</span></div>
           {needsScaling && <span style={{ fontSize: fontSize - 2, color: secondaryTextColor, display: 'flex', alignItems: 'center', gap: 4 }}><Icons.Minimize2 size={12} />{Math.round(scaleFactor * 100)}%</span>}
         </div>
-        <div ref={containerRef} onClick={(e) => handlePanelClick(side, e)} onScroll={(e) => handleScroll(side, e)} style={{ flex: 1, overflow: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20, backgroundColor, cursor: isAddingComment ? 'crosshair' : 'default' }}>
+        <div ref={containerRef} onClick={(e) => handlePanelClick(side, e)} onScroll={(e) => handleScroll(side, e)} style={{ flex: 1, overflow: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20, backgroundColor, cursor: (isAddingComment || isAddingLabel) ? 'crosshair' : 'default' }}>
           <div style={{ width: previewWidth, minHeight: 800, backgroundColor: panelBackgroundColor, borderRadius: 16, boxShadow: '0 2px 24px rgba(0,0,0,0.06)', overflow: 'hidden', position: 'relative', transform: needsScaling ? `scale(${scaleFactor})` : 'none', transformOrigin: 'top center', flexShrink: 0 }}>
             {url ? <iframe src={url} style={{ width: '100%', height: 800, border: 'none' }} title={`${label} Preview`} /> : (
               <div style={{ height: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: secondaryTextColor, gap: 16 }}>
@@ -309,9 +459,13 @@ function Component({ config = {} }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button className={`toolbar-btn ${showUrlInputs ? 'active' : ''}`} onClick={() => setShowUrlInputs(!showUrlInputs)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showUrlInputs ? accentColor : panelBackgroundColor, color: showUrlInputs ? '#fff' : secondaryTextColor, border: `1px solid ${showUrlInputs ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Toggle URL inputs"><Icons.Globe size={22} /></button>
             <button className={`toolbar-btn ${syncScroll ? 'active' : ''}`} onClick={() => setSyncScroll(!syncScroll)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: syncScroll ? accentColor : panelBackgroundColor, color: syncScroll ? '#fff' : secondaryTextColor, border: `1px solid ${syncScroll ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title={syncScroll ? 'Disable sync scroll' : 'Enable sync scroll'}>{syncScroll ? <Icons.Link size={22} /> : <Icons.Unlink size={22} />}</button>
-            <button className={`toolbar-btn ${isAddingComment ? 'active' : ''}`} onClick={() => setIsAddingComment(!isAddingComment)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingComment ? commentPinColor : panelBackgroundColor, color: isAddingComment ? primaryTextColor : secondaryTextColor, border: `1px solid ${isAddingComment ? commentPinColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add comment"><Icons.MessageSquare size={22} /></button>
+            <button className={`toolbar-btn ${isAddingComment ? 'active' : ''}`} onClick={() => { setIsAddingComment(!isAddingComment); setIsAddingLabel(false); }} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingComment ? commentPinColor : panelBackgroundColor, color: isAddingComment ? primaryTextColor : secondaryTextColor, border: `1px solid ${isAddingComment ? commentPinColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add comment"><Icons.MessageSquare size={22} /></button>
+            <button className={`toolbar-btn ${isAddingLabel ? 'active' : ''}`} onClick={() => { setIsAddingLabel(!isAddingLabel); setIsAddingComment(false); }} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingLabel ? '#8B5CF6' : panelBackgroundColor, color: isAddingLabel ? '#fff' : secondaryTextColor, border: `1px solid ${isAddingLabel ? '#8B5CF6' : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add label"><Icons.Tag size={22} /></button>
             <button className="toolbar-btn" onClick={() => setShowSessionPanel(!showSessionPanel)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showSessionPanel ? accentColor : panelBackgroundColor, color: showSessionPanel ? '#fff' : secondaryTextColor, border: `1px solid ${showSessionPanel ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Sessions"><Icons.Save size={22} /></button>
-            <button className="toolbar-btn" onClick={exportSession} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export session"><Icons.Download size={22} /></button>
+            <button className="toolbar-btn" onClick={exportToCSV} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export to CSV"><Icons.FileText size={22} /></button>
+            <button className="toolbar-btn" onClick={exportSession} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export session (JSON)"><Icons.Download size={22} /></button>
+            <button className="toolbar-btn" onClick={() => fileInputRef.current?.click()} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Import session (JSON)"><Icons.Upload size={22} /></button>
+            <input ref={fileInputRef} type="file" accept=".json" onChange={importFromJSON} style={{ display: 'none' }} />
           </div>
         </div>
 
@@ -373,11 +527,11 @@ function Component({ config = {} }) {
         {renderPanel('right', rightUrl, setRightUrl, algorithmAccentColor, rightLabel)}
       </main>
 
-      {isAddingComment && (
+      {(isAddingComment || isAddingLabel) && (
         <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: panelBackgroundColor, color: primaryTextColor, padding: '10px 20px', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', gap: 10, zIndex: 100 }}>
-          <Icons.MapPin size={18} style={{ color: commentPinColor }} />
-          <span>Click anywhere on a preview to pin a comment</span>
-          <button onClick={() => setIsAddingComment(false)} style={{ marginLeft: 8, padding: '4px 10px', backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1, color: secondaryTextColor }}>Cancel</button>
+          {isAddingLabel ? <Icons.Tag size={18} style={{ color: '#8B5CF6' }} /> : <Icons.MapPin size={18} style={{ color: commentPinColor }} />}
+          <span>Click anywhere on a preview to {isAddingLabel ? 'add a label' : 'pin a comment'}</span>
+          <button onClick={() => { setIsAddingComment(false); setIsAddingLabel(false); }} style={{ marginLeft: 8, padding: '4px 10px', backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1, color: secondaryTextColor }}>Cancel</button>
         </div>
       )}
     </div>
