@@ -81,8 +81,7 @@ function Component({ config = {} }) {
   const [syncScroll, setSyncScroll] = React.useState(true);
   const [comments, setComments] = React.useState([]);
   const [activeComment, setActiveComment] = React.useState(null);
-  const [isAddingComment, setIsAddingComment] = React.useState(false);
-  const [isAddingLabel, setIsAddingLabel] = React.useState(false);
+  const [isAddingAnnotation, setIsAddingAnnotation] = React.useState(false);
   const [pendingCommentSide, setPendingCommentSide] = React.useState(null);
   const [newCommentText, setNewCommentText] = React.useState('');
   const [pendingCommentPosition, setPendingCommentPosition] = React.useState(null);
@@ -149,7 +148,7 @@ function Component({ config = {} }) {
   };
 
   const handlePanelClick = (side, e) => {
-    if (!isAddingComment && !isAddingLabel) return;
+    if (!isAddingAnnotation) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = e.clientY - rect.top + e.currentTarget.scrollTop;
@@ -158,45 +157,26 @@ function Component({ config = {} }) {
   };
 
   const saveComment = () => {
-    if (isAddingLabel) {
-      // Save as label
-      if (pendingLabels.length === 0 || !pendingCommentPosition) return;
-      const newComment = { 
-        id: Date.now(), 
-        side: pendingCommentSide, 
-        x: pendingCommentPosition.x, 
-        y: pendingCommentPosition.y, 
-        labels: [...pendingLabels], 
-        text: '', 
-        timestamp: new Date().toISOString(), 
-        resolved: false,
-        type: 'label'
-      };
-      setComments(prev => [...prev, newComment]);
-      setPendingLabels([]);
-      setPendingCommentPosition(null);
-      setPendingCommentSide(null);
-      setIsAddingLabel(false);
-    } else {
-      // Save as comment
-      if (!newCommentText.trim() || !pendingCommentPosition) return;
-      const newComment = { 
-        id: Date.now(), 
-        side: pendingCommentSide, 
-        x: pendingCommentPosition.x, 
-        y: pendingCommentPosition.y, 
-        text: newCommentText, 
-        labels: [],
-        timestamp: new Date().toISOString(), 
-        resolved: false,
-        type: 'comment'
-      };
-      setComments(prev => [...prev, newComment]);
-      setNewCommentText('');
-      setPendingCommentPosition(null);
-      setPendingCommentSide(null);
-      setIsAddingComment(false);
-    }
+    // Labels are mandatory, comment is optional
+    if (pendingLabels.length === 0 || !pendingCommentPosition) return;
+    
+    const newComment = { 
+      id: Date.now(), 
+      side: pendingCommentSide, 
+      x: pendingCommentPosition.x, 
+      y: pendingCommentPosition.y, 
+      labels: [...pendingLabels], 
+      text: newCommentText.trim(), 
+      timestamp: new Date().toISOString(), 
+      resolved: false,
+      type: 'annotation'
+    };
+    setComments(prev => [...prev, newComment]);
+    setNewCommentText('');
+    setPendingLabels([]);
+    setPendingCommentPosition(null);
+    setPendingCommentSide(null);
+    setIsAddingAnnotation(false);
   };
 
   const cancelComment = () => {
@@ -204,8 +184,7 @@ function Component({ config = {} }) {
     setPendingLabels([]);
     setPendingCommentPosition(null);
     setPendingCommentSide(null);
-    setIsAddingComment(false);
-    setIsAddingLabel(false);
+    setIsAddingAnnotation(false);
   };
 
   const toggleLabel = (labelId) => {
@@ -310,36 +289,41 @@ function Component({ config = {} }) {
   const renderCommentPin = (comment) => {
     const isActive = activeComment === comment.id;
     const commentIndex = comments.indexOf(comment) + 1;
-    const pinColor = comment.type === 'label' ? '#8B5CF6' : commentPinColor;
+    const pinColor = '#8B5CF6';
     return (
-      <div key={comment.id} onClick={(e) => { e.stopPropagation(); setActiveComment(isActive ? null : comment.id); }} style={{ position: 'absolute', left: `${comment.x}%`, top: `${comment.y}px`, transform: 'translate(-50%, -100%)', zIndex: isActive ? 1000 : 100, cursor: 'pointer' }}>
+      <div key={comment.id} onClick={(e) => { e.stopPropagation(); setActiveComment(isActive ? null : comment.id); }} style={{ position: 'absolute', left: `${comment.x}%`, top: `${comment.y}px`, transform: 'translate(-50%, -50%)', zIndex: isActive ? 10000 : 9000, cursor: 'pointer' }}>
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: comment.resolved ? secondaryTextColor : pinColor, transform: isActive ? 'rotate(-45deg) scale(1.1)' : 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.12)', transition: 'transform 200ms ease-out, box-shadow 200ms ease-out' }}>
-            <span style={{ transform: 'rotate(45deg)', fontSize: 11, fontWeight: 500, color: comment.resolved ? '#fff' : primaryTextColor }}>{commentIndex}</span>
+          <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: comment.resolved ? secondaryTextColor : pinColor, transform: isActive ? 'rotate(-45deg) scale(1.1)' : 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.2)', transition: 'transform 200ms ease-out, box-shadow 200ms ease-out' }}>
+            <span style={{ transform: 'rotate(45deg)', fontSize: 11, fontWeight: 500, color: '#fff' }}>{commentIndex}</span>
           </div>
         </div>
         {isActive && (
-          <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 32, left: '50%', transform: 'translateX(-50%)', backgroundColor: panelBackgroundColor, borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: `1px solid ${borderColor}`, padding: 14, minWidth: 240, maxWidth: 300 }}>
-            {comment.type === 'label' ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <Icons.Tag size={14} color="#8B5CF6" />
-                  <span style={{ fontSize: fontSize - 1, fontWeight: 500, color: '#8B5CF6' }}>Labels</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {(comment.labels || []).map(labelId => {
-                    const label = LABEL_OPTIONS.find(l => l.id === labelId);
-                    return label ? (
-                      <div key={labelId} style={{ padding: '6px 10px', backgroundColor: `${label.color}10`, border: `1px solid ${label.color}40`, borderRadius: 6, fontSize: fontSize - 1, color: label.color, fontWeight: 500 }}>
-                        {label.label}
-                      </div>
-                    ) : null;
-                  })}
-                </div>
+          <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', backgroundColor: panelBackgroundColor, borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.25)', border: `1px solid ${borderColor}`, padding: 14, minWidth: 240, maxWidth: 320, zIndex: 10001 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <Icons.Tag size={14} color="#8B5CF6" />
+                <span style={{ fontSize: fontSize - 1, fontWeight: 500, color: '#8B5CF6' }}>Labels</span>
               </div>
-            ) : (
-              <p style={{ margin: 0, fontSize, color: primaryTextColor, lineHeight: 1.6, wordBreak: 'break-word' }}>{comment.text}</p>
-            )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: comment.text ? 12 : 0 }}>
+                {(comment.labels || []).map(labelId => {
+                  const label = LABEL_OPTIONS.find(l => l.id === labelId);
+                  return label ? (
+                    <div key={labelId} style={{ padding: '6px 10px', backgroundColor: `${label.color}10`, border: `1px solid ${label.color}40`, borderRadius: 6, fontSize: fontSize - 1, color: label.color, fontWeight: 500 }}>
+                      {label.label}
+                    </div>
+                  ) : null;
+                })}
+              </div>
+              {comment.text && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${borderColor}` }}>
+                    <Icons.MessageSquare size={14} color={secondaryTextColor} />
+                    <span style={{ fontSize: fontSize - 1, fontWeight: 500, color: secondaryTextColor }}>Comment</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize, color: primaryTextColor, lineHeight: 1.6, wordBreak: 'break-word' }}>{comment.text}</p>
+                </div>
+              )}
+            </div>
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <span style={{ fontSize: fontSize - 2, color: secondaryTextColor, display: 'flex', alignItems: 'center', gap: 4 }}><Icons.Clock size={12} />{new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -355,38 +339,43 @@ function Component({ config = {} }) {
 
   const renderPendingComment = () => {
     if (!pendingCommentPosition) return null;
-    const pinColor = isAddingLabel ? '#8B5CF6' : commentPinColor;
+    const pinColor = '#8B5CF6';
     return (
-      <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', left: `${pendingCommentPosition.x}%`, top: `${pendingCommentPosition.y}px`, transform: 'translate(-50%, 0)', zIndex: 1001 }}>
-        <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: pinColor, transform: 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', marginBottom: 8 }}><span style={{ transform: 'rotate(45deg)' }}><Icons.Plus size={14} /></span></div>
-        <div style={{ backgroundColor: panelBackgroundColor, borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: `1px solid ${borderColor}`, padding: 14, width: 280 }}>
-          {isAddingLabel ? (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <Icons.Tag size={16} color="#8B5CF6" />
-                <span style={{ fontSize, fontWeight: 500 }}>Select Labels</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {LABEL_OPTIONS.map(label => (
-                  <label key={label.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, borderRadius: 6, border: `1px solid ${borderColor}`, cursor: 'pointer', backgroundColor: pendingLabels.includes(label.id) ? `${label.color}10` : 'transparent' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={pendingLabels.includes(label.id)}
-                      onChange={() => toggleLabel(label.id)}
-                      style={{ width: 16, height: 16, accentColor: label.color, cursor: 'pointer' }}
-                    />
-                    <span style={{ flex: 1, fontSize: fontSize - 1, color: primaryTextColor }}>{label.label}</span>
-                    <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: label.color }} />
-                  </label>
-                ))}
-              </div>
+      <div onClick={e => e.stopPropagation()} style={{ position: 'fixed', zIndex: 10001 }}>
+        <div style={{ width: 26, height: 26, borderRadius: '50% 50% 50% 0', backgroundColor: pinColor, transform: 'rotate(-45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', marginBottom: 8 }}><span style={{ transform: 'rotate(45deg)' }}><Icons.Plus size={14} /></span></div>
+        <div style={{ backgroundColor: panelBackgroundColor, borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.25)', border: `1px solid ${borderColor}`, padding: 14, width: 320 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <Icons.Tag size={16} color="#8B5CF6" />
+              <span style={{ fontSize, fontWeight: 500 }}>Select Labels</span>
+              <span style={{ fontSize: fontSize - 2, color: '#EF4444', marginLeft: 'auto' }}>*Required</span>
             </div>
-          ) : (
-            <textarea autoFocus value={newCommentText} onChange={e => setNewCommentText(e.target.value)} placeholder="Add your comment..." style={{ width: '100%', minHeight: 80, padding: 10, fontSize, fontFamily, color: primaryTextColor, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 8, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
-          )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {LABEL_OPTIONS.map(label => (
+                <label key={label.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, borderRadius: 6, border: `1px solid ${borderColor}`, cursor: 'pointer', backgroundColor: pendingLabels.includes(label.id) ? `${label.color}10` : 'transparent' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={pendingLabels.includes(label.id)}
+                    onChange={() => toggleLabel(label.id)}
+                    style={{ width: 16, height: 16, accentColor: label.color, cursor: 'pointer' }}
+                  />
+                  <span style={{ flex: 1, fontSize: fontSize - 1, color: primaryTextColor }}>{label.label}</span>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: label.color }} />
+                </label>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${borderColor}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <Icons.MessageSquare size={14} color={secondaryTextColor} />
+              <span style={{ fontSize: fontSize - 1, fontWeight: 500, color: secondaryTextColor }}>Comment</span>
+              <span style={{ fontSize: fontSize - 2, color: secondaryTextColor }}>Optional</span>
+            </div>
+            <textarea value={newCommentText} onChange={e => setNewCommentText(e.target.value)} placeholder="Add additional notes..." style={{ width: '100%', minHeight: 60, padding: 10, fontSize, fontFamily, color: primaryTextColor, backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 8, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
           <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <button onClick={cancelComment} style={{ padding: '7px 14px', fontSize, fontWeight: 500, backgroundColor: 'transparent', color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={saveComment} disabled={isAddingLabel ? pendingLabels.length === 0 : !newCommentText.trim()} style={{ padding: '7px 14px', fontSize, fontWeight: 500, backgroundColor: (isAddingLabel ? pendingLabels.length > 0 : newCommentText.trim()) ? accentColor : borderColor, color: '#fff', border: 'none', borderRadius: 8, cursor: (isAddingLabel ? pendingLabels.length > 0 : newCommentText.trim()) ? 'pointer' : 'not-allowed' }}>Save</button>
+            <button onClick={saveComment} disabled={pendingLabels.length === 0} style={{ padding: '7px 14px', fontSize, fontWeight: 500, backgroundColor: pendingLabels.length > 0 ? accentColor : borderColor, color: '#fff', border: 'none', borderRadius: 8, cursor: pendingLabels.length > 0 ? 'pointer' : 'not-allowed' }}>Save</button>
           </div>
         </div>
       </div>
@@ -402,7 +391,7 @@ function Component({ config = {} }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: accent }} /><span style={{ fontWeight: 500, fontSize: fontSize + 1 }}>{label}</span></div>
           {needsScaling && <span style={{ fontSize: fontSize - 2, color: secondaryTextColor, display: 'flex', alignItems: 'center', gap: 4 }}><Icons.Minimize2 size={12} />{Math.round(scaleFactor * 100)}%</span>}
         </div>
-        <div ref={containerRef} onClick={(e) => handlePanelClick(side, e)} onScroll={(e) => handleScroll(side, e)} style={{ flex: 1, overflow: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20, backgroundColor, cursor: (isAddingComment || isAddingLabel) ? 'crosshair' : 'default' }}>
+        <div ref={containerRef} onClick={(e) => handlePanelClick(side, e)} onScroll={(e) => handleScroll(side, e)} style={{ flex: 1, overflow: 'auto', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 20, backgroundColor, cursor: isAddingAnnotation ? 'crosshair' : 'default' }}>
           <div style={{ width: previewWidth, minHeight: 800, backgroundColor: panelBackgroundColor, borderRadius: 16, boxShadow: '0 2px 24px rgba(0,0,0,0.06)', overflow: 'hidden', position: 'relative', transform: needsScaling ? `scale(${scaleFactor})` : 'none', transformOrigin: 'top center', flexShrink: 0 }}>
             {url ? <iframe src={url} style={{ width: '100%', height: 800, border: 'none' }} title={`${label} Preview`} /> : (
               <div style={{ height: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: secondaryTextColor, gap: 16 }}>
@@ -410,9 +399,9 @@ function Component({ config = {} }) {
                 <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 500, color: primaryTextColor, marginBottom: 4 }}>{label} Version</p><p style={{ margin: 0, fontSize: fontSize - 1 }}>Enter URL above to load preview</p></div>
               </div>
             )}
-            {comments.filter(c => c.side === side).map(comment => renderCommentPin(comment))}
-            {pendingCommentSide === side && renderPendingComment()}
           </div>
+          {comments.filter(c => c.side === side).map(comment => renderCommentPin(comment))}
+          {pendingCommentSide === side && renderPendingComment()}
         </div>
       </div>
     );
@@ -459,8 +448,7 @@ function Component({ config = {} }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button className={`toolbar-btn ${showUrlInputs ? 'active' : ''}`} onClick={() => setShowUrlInputs(!showUrlInputs)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showUrlInputs ? accentColor : panelBackgroundColor, color: showUrlInputs ? '#fff' : secondaryTextColor, border: `1px solid ${showUrlInputs ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Toggle URL inputs"><Icons.Globe size={22} /></button>
             <button className={`toolbar-btn ${syncScroll ? 'active' : ''}`} onClick={() => setSyncScroll(!syncScroll)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: syncScroll ? accentColor : panelBackgroundColor, color: syncScroll ? '#fff' : secondaryTextColor, border: `1px solid ${syncScroll ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title={syncScroll ? 'Disable sync scroll' : 'Enable sync scroll'}>{syncScroll ? <Icons.Link size={22} /> : <Icons.Unlink size={22} />}</button>
-            <button className={`toolbar-btn ${isAddingComment ? 'active' : ''}`} onClick={() => { setIsAddingComment(!isAddingComment); setIsAddingLabel(false); }} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingComment ? commentPinColor : panelBackgroundColor, color: isAddingComment ? primaryTextColor : secondaryTextColor, border: `1px solid ${isAddingComment ? commentPinColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add comment"><Icons.MessageSquare size={22} /></button>
-            <button className={`toolbar-btn ${isAddingLabel ? 'active' : ''}`} onClick={() => { setIsAddingLabel(!isAddingLabel); setIsAddingComment(false); }} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingLabel ? '#8B5CF6' : panelBackgroundColor, color: isAddingLabel ? '#fff' : secondaryTextColor, border: `1px solid ${isAddingLabel ? '#8B5CF6' : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add label"><Icons.Tag size={22} /></button>
+            <button className={`toolbar-btn ${isAddingAnnotation ? 'active' : ''}`} onClick={() => setIsAddingAnnotation(!isAddingAnnotation)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isAddingAnnotation ? '#8B5CF6' : panelBackgroundColor, color: isAddingAnnotation ? '#fff' : secondaryTextColor, border: `1px solid ${isAddingAnnotation ? '#8B5CF6' : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Add annotation (labels + optional comment)"><Icons.Tag size={22} /></button>
             <button className="toolbar-btn" onClick={() => setShowSessionPanel(!showSessionPanel)} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: showSessionPanel ? accentColor : panelBackgroundColor, color: showSessionPanel ? '#fff' : secondaryTextColor, border: `1px solid ${showSessionPanel ? accentColor : borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Sessions"><Icons.Save size={22} /></button>
             <button className="toolbar-btn" onClick={exportToCSV} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export to CSV"><Icons.FileText size={22} /></button>
             <button className="toolbar-btn" onClick={exportSession} style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: panelBackgroundColor, color: secondaryTextColor, border: `1px solid ${borderColor}`, borderRadius: 12, cursor: 'pointer' }} title="Export session (JSON)"><Icons.Download size={22} /></button>
@@ -527,11 +515,11 @@ function Component({ config = {} }) {
         {renderPanel('right', rightUrl, setRightUrl, algorithmAccentColor, rightLabel)}
       </main>
 
-      {(isAddingComment || isAddingLabel) && (
+      {isAddingAnnotation && (
         <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: panelBackgroundColor, color: primaryTextColor, padding: '10px 20px', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: `1px solid ${borderColor}`, display: 'flex', alignItems: 'center', gap: 10, zIndex: 100 }}>
-          {isAddingLabel ? <Icons.Tag size={18} style={{ color: '#8B5CF6' }} /> : <Icons.MapPin size={18} style={{ color: commentPinColor }} />}
-          <span>Click anywhere on a preview to {isAddingLabel ? 'add a label' : 'pin a comment'}</span>
-          <button onClick={() => { setIsAddingComment(false); setIsAddingLabel(false); }} style={{ marginLeft: 8, padding: '4px 10px', backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1, color: secondaryTextColor }}>Cancel</button>
+          <Icons.Tag size={18} style={{ color: '#8B5CF6' }} />
+          <span>Click anywhere on a preview to add annotation (labels required, comment optional)</span>
+          <button onClick={() => setIsAddingAnnotation(false)} style={{ marginLeft: 8, padding: '4px 10px', backgroundColor, border: `1px solid ${borderColor}`, borderRadius: 6, cursor: 'pointer', fontSize: fontSize - 1, color: secondaryTextColor }}>Cancel</button>
         </div>
       )}
     </div>
