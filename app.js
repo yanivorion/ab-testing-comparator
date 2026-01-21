@@ -555,6 +555,16 @@ function Component({ config = {} }) {
 
   const matchedPairs = getMatchedPairs();
 
+  // Helper function to check if a designer site has a match
+  const hasAlgorithmMatch = (designerSiteId) => {
+    return matchedPairs.some(pair => pair.designerSite.id === designerSiteId);
+  };
+
+  // Helper function to check if an algorithm site has a match
+  const hasDesignerMatch = (algorithmSiteId) => {
+    return matchedPairs.some(pair => pair.algorithmSite.id === algorithmSiteId);
+  };
+
   const selectMatchedPair = (pairId) => {
     setSelectedMatchedPair(pairId);
     const pair = matchedPairs.find(p => p.id === pairId);
@@ -1203,9 +1213,14 @@ function Component({ config = {} }) {
                   }}
                 >
                   <option value="">Select test site...</option>
-                  {testWebsitesDesigner.map(site => (
-                    <option key={site.id} value={site.id}>{getWebsiteName(site, 'designer')}</option>
-                  ))}
+                  {testWebsitesDesigner.map(site => {
+                    const isPaired = hasAlgorithmMatch(site.id);
+                    return (
+                      <option key={site.id} value={site.id}>
+                        {isPaired ? '🔗 ' : '○ '}{getWebsiteName(site, 'designer')}
+                      </option>
+                    );
+                  })}
                 </select>
                 <span style={{ fontSize: fontSize - 2, color: designerAccentColor, fontWeight: 600, padding: '4px 8px', backgroundColor: `${designerAccentColor}15`, borderRadius: 6, whiteSpace: 'nowrap' }}>
                   {testWebsitesDesigner.length}
@@ -1235,9 +1250,14 @@ function Component({ config = {} }) {
                   }}
                 >
                   <option value="">Select test site...</option>
-                  {testWebsitesAlgorithm.map(site => (
-                    <option key={site.id} value={site.id}>{getWebsiteName(site, 'algorithm')}</option>
-                  ))}
+                  {testWebsitesAlgorithm.map(site => {
+                    const isPaired = hasDesignerMatch(site.id);
+                    return (
+                      <option key={site.id} value={site.id}>
+                        {isPaired ? '🔗 ' : '○ '}{getWebsiteName(site, 'algorithm')}
+                      </option>
+                    );
+                  })}
                 </select>
                 <span style={{ fontSize: fontSize - 2, color: algorithmAccentColor, fontWeight: 600, padding: '4px 8px', backgroundColor: `${algorithmAccentColor}15`, borderRadius: 6, whiteSpace: 'nowrap' }}>
                   {testWebsitesAlgorithm.length}
