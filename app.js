@@ -59,7 +59,8 @@ const LABEL_OPTIONS = [
   { id: 'legit-construction', label: 'Legit construction, cannot solve by heuristics', color: '#F59E0B' }
 ];
 
-const TEST_WEBSITES = [
+// Algorithm side test websites (RIGHT)
+const TEST_WEBSITES_ALGORITHM = [
   { id: 'darle-284', name: 'Darle Lumina (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-284' },
   { id: 'wellwell-283', name: 'WellWell (Mental Health)', url: 'https://yanivo4.wixsite.com/my-site-283' },
   { id: 'dyzu-281', name: 'DYZU (Social Media Agency)', url: 'https://yanivo4.wixsite.com/my-site-281' },
@@ -69,13 +70,18 @@ const TEST_WEBSITES = [
   { id: 'hugo-288', name: 'Hugo Bellamy (Photography)', url: 'https://yanivo4.wixsite.com/my-site-288' },
   { id: 'dreama-287', name: 'dreama. (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-287' },
   { id: 'vexta-291', name: 'Vexta (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-291' },
-  { id: 'realdone-292', name: 'Real&Done (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-292' },
+  { id: 'realdone-292', name: 'Real&Done (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-292' }
+];
+
+// Designer side test websites (LEFT)
+const TEST_WEBSITES_DESIGNER = [
   { id: 'realdone-298', name: 'Real&Done v2 (Remodeling)', url: 'https://yanivo4.wixsite.com/my-site-298' },
   { id: 'vexta-299', name: 'Vexta v2 (AI Conference)', url: 'https://yanivo4.wixsite.com/my-site-299' },
   { id: 'darle-300', name: 'Darle Lumina v2 (Smart Lighting)', url: 'https://yanivo4.wixsite.com/my-site-300' },
   { id: 'wedding-294', name: 'E&J Wedding', url: 'https://yanivo4.wixsite.com/my-site-294' },
   { id: 'therapy-295', name: 'Dr. Dahlia Curtis (Therapy)', url: 'https://yanivo4.wixsite.com/my-site-295' },
   { id: 'dreama-297', name: 'dreama. v2 (Skincare)', url: 'https://yanivo4.wixsite.com/my-site-297' },
+  { id: 'site-294-2', name: 'Test Site 294', url: 'https://yanivo4.wixsite.com/my-site-294' },
   { id: 'site-293', name: 'Test Site 293', url: 'https://yanivo4.wixsite.com/my-site-293' },
   { id: 'site-290', name: 'Test Site 290', url: 'https://yanivo4.wixsite.com/my-site-290' },
   { id: 'site-235', name: 'Test Site 235', url: 'https://yanivo4.wixsite.com/my-site-235' },
@@ -735,7 +741,7 @@ function Component({ config = {} }) {
                   value={selectedTestSiteLeft} 
                   onChange={(e) => {
                     setSelectedTestSiteLeft(e.target.value);
-                    const site = TEST_WEBSITES.find(s => s.id === e.target.value);
+                    const site = TEST_WEBSITES_DESIGNER.find(s => s.id === e.target.value);
                     if (site) setLeftUrl(site.url);
                   }}
                   style={{ 
@@ -752,7 +758,7 @@ function Component({ config = {} }) {
                   }}
                 >
                   <option value="">Select test site...</option>
-                  {TEST_WEBSITES.map(site => (
+                  {TEST_WEBSITES_DESIGNER.map(site => (
                     <option key={site.id} value={site.id}>{site.name}</option>
                   ))}
                 </select>
@@ -764,7 +770,7 @@ function Component({ config = {} }) {
                   value={selectedTestSiteRight} 
                   onChange={(e) => {
                     setSelectedTestSiteRight(e.target.value);
-                    const site = TEST_WEBSITES.find(s => s.id === e.target.value);
+                    const site = TEST_WEBSITES_ALGORITHM.find(s => s.id === e.target.value);
                     if (site) setRightUrl(site.url);
                   }}
                   style={{ 
@@ -781,7 +787,7 @@ function Component({ config = {} }) {
                   }}
                 >
                   <option value="">Select test site...</option>
-                  {TEST_WEBSITES.map(site => (
+                  {TEST_WEBSITES_ALGORITHM.map(site => (
                     <option key={site.id} value={site.id}>{site.name}</option>
                   ))}
                 </select>
