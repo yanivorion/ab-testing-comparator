@@ -187,7 +187,7 @@ const TEST_WEBSITES_ALGORITHM_DEFAULT = [
   { id: 'site-108', name: 'My Site 108', url: 'https://davidso95.wixsite.com/my-site-108' },
   { id: 'comingsoon-dreamy', name: 'Coming Soon Dreamy', url: 'https://nivz30.wixsite.com/comingsoondreamyalgo' },
   { id: 'aesthetic-medical', name: 'Aesthetic Medical', url: 'https://nivz30.wixsite.com/aestheticmedicalalgo' },
-  { id: 'aria-blake', name: 'Aria Blake', url: 'https://galbu09.wixsite.com/ariablake-algo' },
+  { id: 'aria-blake', name: 'Aria Blake', url: 'https://galbu09.wixsite.com/ariablake' },
   { id: 'ux-designer-sleek', name: 'UX Designer Sleek', url: 'https://nivz30.wixsite.com/uxdesignersleekalgo' },
   { id: 'aijalo', name: 'Aijalo', url: 'https://davidso95.wixsite.com/aijalo-algo' },
   { id: 'toulouse', name: 'Toulouse', url: 'https://galbu09.wixsite.com/toulouse-algo' },
@@ -227,8 +227,6 @@ const TEST_WEBSITES_DESIGNER_DEFAULT = [
   { id: 'site-294-2', name: 'Test Site 294', url: 'https://yanivo4.wixsite.com/my-site-294' },
   { id: 'site-293', name: 'Test Site 293', url: 'https://yanivo4.wixsite.com/my-site-293' },
   { id: 'site-290', name: 'Test Site 290', url: 'https://yanivo4.wixsite.com/my-site-290' },
-  { id: 'site-235', name: 'Test Site 235', url: 'https://yanivo4.wixsite.com/my-site-235' },
-  { id: 'site-236', name: 'Test Site 236', url: 'https://yanivo4.wixsite.com/my-site-236' },
   { id: 'site-237', name: 'Test Site 237', url: 'https://yanivo4.wixsite.com/my-site-237' },
   { id: 'site-243', name: 'Test Site 243', url: 'https://yanivo4.wixsite.com/my-site-243' },
   { id: 'site-244', name: 'Test Site 244', url: 'https://yanivo4.wixsite.com/my-site-244' },
@@ -520,13 +518,21 @@ function Component({ config = {} }) {
         
         // Remove common suffixes/prefixes for better matching
         const cleanDesignerName = designerName
-          .replace(/\s*(designer|design|v2|version 2)\s*/gi, '')
+          .replace(/\s*(designer|design|v2|version 2|bold|clean)\s*/gi, '')
           .replace(/\s+/g, ' ')
           .trim();
         const cleanAlgoName = algoName
           .replace(/\s*(algo|algorithm|v1|version 1)\s*/gi, '')
           .replace(/\s+/g, ' ')
           .trim();
+        
+        // Special case for "My Site XXX" pattern - match if base name is the same
+        const isMySitePattern = /^my site \d+$/i.test(cleanDesignerName) && /^my site \d+$/i.test(cleanAlgoName);
+        if (isMySitePattern) {
+          const designerBase = cleanDesignerName.replace(/\s*\d+$/i, '').trim();
+          const algoBase = cleanAlgoName.replace(/\s*\d+$/i, '').trim();
+          return designerBase === algoBase;
+        }
         
         // Check if names match
         return cleanDesignerName === cleanAlgoName || 
